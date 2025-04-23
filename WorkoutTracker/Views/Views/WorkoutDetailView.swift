@@ -4,34 +4,87 @@ struct WorkoutDetailView: View {
     @EnvironmentObject private var dataManager: DataManager
     @State private var showingAddExercise = false
     
+    // Add state variables for editing
+    @State private var isEditing = false
+    @State private var name: String
+    @State private var date: Date
+    @State private var duration: String
+    @State private var notes: String
+    
     let workout: WorkoutModel
+    
+    // Initialize state variables with workout values
+    init(workout: WorkoutModel) {
+        self.workout = workout
+        _name = State(initialValue: workout.name)
+        _date = State(initialValue: workout.date)
+        _duration = State(initialValue: "\(workout.duration)")
+        _notes = State(initialValue: workout.notes ?? "")
+    }
     
     var body: some View {
         List {
             Section(header: Text("Details")) {
-                HStack {
-                    Text("Date")
-                    Spacer()
-                    Text(formattedDate)
-                        .foregroundColor(.secondary)
-                }
-                
-                HStack {
-                    Text("Duration")
-                    Spacer()
-                    Text("\(workout.duration) minutes")
-                        .foregroundColor(.secondary)
-                }
-                
-                if let notes = workout.notes, !notes.isEmpty {
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text("Notes")
-                            .font(.headline)
-                        Text(notes)
-                            .font(.body)
+                if isEditing {
+                    // Edit mode fields
+                    TextField("Workout Name", text: $name)
+                    
+                    DatePicker("Date", selection: $date, displayedComponents: .date)
+                    
+                    HStack {
+                        Text("Duration (minutes)")
+                        Spacer()
+                        TextField("Duration", text: $duration)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                    }
+                    
+                    TextField("Notes", text: $notes, axis: .vertical)
+                        .lineLimit(5)
+                } else {
+                    // Display mode fields
+                    HStack {
+                        Text("Date")
+                        Spacer()
+                        Text(formattedDate)
                             .foregroundColor(.secondary)
                     }
-                    .padding(.vertical, 5)
+                    
+                    HStack {
+                        Text("Duration")
+                        Spacer()
+                        Text("\(workout.duration) minutes")
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    if let notes = workout.notes, !notes.isEmpty {
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("Notes")
+                                .font(.headline)
+                            Text(notes)
+                                .font(.body)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 5)
+                    }
+                }
+            }
+            
+            // Edit mode buttons
+            if isEditing {
+                Section {
+                    Button("Save Changes") {
+                        saveChanges()
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .foregroundColor(.blue)
+                    
+                    Button("Cancel") {
+                        isEditing = false
+                        resetFields()
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .foregroundColor(.red)
                 }
             }
             
@@ -66,6 +119,15 @@ struct WorkoutDetailView: View {
         .sheet(isPresented: $showingAddExercise) {
             AddExerciseView(workout: workout)
         }
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                if !isEditing {
+                    Button("Edit") {
+                        isEditing = true
+                    }
+                }
+            }
+        }
     }
     
     private var formattedDate: String {
@@ -79,6 +141,30 @@ struct WorkoutDetailView: View {
         for index in offsets {
             dataManager.deleteExercise(exercises[index])
         }
+    }
+    
+    // Add functions for saving changes and resetting fields
+    private func saveChanges() {
+        guard let durationValue = Int16(duration) else {
+            return
+        }
+        
+        dataManager.updateWorkout(
+            workout: workout,
+            name: name,
+            date: date,
+            duration: durationValue,
+            notes: notes.isEmpty ? nil : notes
+        )
+        
+        isEditing = false
+    }
+    
+    private func resetFields() {
+        name = workout.name
+        date = workout.date
+        duration = "\(workout.duration)"
+        notes = workout.notes ?? ""
     }
 }
 
@@ -175,4 +261,4 @@ struct CategoryWorkoutView: View {
         }
         .navigationTitle("\(workout.name) Categories")
     }
-} 
+}

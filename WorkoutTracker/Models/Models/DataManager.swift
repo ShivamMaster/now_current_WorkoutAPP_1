@@ -222,4 +222,26 @@ class DataManager: ObservableObject {
         
         return progressData
     }
-} 
+    
+    func updateWorkout(
+        workout: WorkoutModel,
+        name: String? = nil,
+        date: Date? = nil,
+        duration: Int16? = nil,
+        notes: String? = nil
+    ) {
+        if let name = name {
+            workout.name = name
+        }
+        if let date = date {
+            workout.date = date
+        }
+        if let duration = duration {
+            workout.duration = duration
+        }
+        if let notes = notes {
+            workout.notes = notes
+        }
+        save()
+    }
+}
