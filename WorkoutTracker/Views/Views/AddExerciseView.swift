@@ -4,8 +4,8 @@ struct AddExerciseView: View {
     @EnvironmentObject private var dataManager: DataManager
     @Environment(\.presentationMode) var presentationMode
     
-    // Add this line to get the user's preferred weight unit
-    @AppStorage("weightUnit") private var weightUnit: String = "kg"
+    @AppStorage("weightUnit") private var defaultWeightUnit: String = "kg"
+    @State private var weightUnit: String
     
     let workout: WorkoutModel
     
@@ -29,6 +29,7 @@ struct AddExerciseView: View {
     init(workout: WorkoutModel, preselectedType: ExerciseType? = nil) {
         self.workout = workout
         _selectedExerciseType = State(initialValue: preselectedType ?? .strengthTraining)
+        _weightUnit = State(initialValue: UserDefaults.standard.string(forKey: "weightUnit") ?? "kg")
     }
     
     var body: some View {
@@ -73,6 +74,13 @@ struct AddExerciseView: View {
                 
                 // Dynamic section based on selected exercise type
                 Section(header: Text("Exercise Details")) {
+                    // Add unit picker before weight field
+                    Picker("Unit", selection: $weightUnit) {
+                        Text("kg").tag("kg")
+                        Text("lbs").tag("lbs")
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
+
                     ForEach(selectedExerciseType.measurementFields, id: \.self) { field in
                         switch field {
                         case "Sets":
@@ -93,7 +101,6 @@ struct AddExerciseView: View {
                             }
                         case "Weight (kg)":
                             HStack {
-                                // Change label to use the preferred unit
                                 Text("Weight (\(weightUnit))")
                                 Spacer()
                                 TextField("Weight", text: $weight)
