@@ -1,12 +1,10 @@
 import SwiftUI
 
 struct SettingsView: View {
-    //@State private var weightUnit = "kg"
-    @State private var notificationsEnabled = true
-    @State private var reminderTime = Calendar.current.date(bySettingHour: 19, minute: 0, second: 0, of: Date())!
     @ObservedObject private var themeManager = ThemeManager.shared
     @AppStorage("weightUnit") private var weightUnit: String = "kg"
-    
+    @State private var notificationsEnabled = true
+    @State private var reminderTime = Calendar.current.date(bySettingHour: 19, minute: 0, second: 0, of: Date())!
     
     let weightUnits = ["kg", "lbs"]
     
@@ -16,34 +14,32 @@ struct SettingsView: View {
                 Section(header: Text("Preferences")) {
                     Picker("Weight Unit", selection: $weightUnit) {
                         ForEach(weightUnits, id: \.self) { unit in
-                        Text(unit)
+                            Text(unit)
                         }
                     }
                     Toggle("Dark Mode", isOn: $themeManager.isDarkMode)
+                        .onChange(of: themeManager.isDarkMode) { value in
+                            themeManager.themeMode = value ? .dark : .light
+                        }
                 }
                 Section(header: Text("Reminders")) {
-                        Toggle("Enable Notifications", isOn: $notificationsEnabled)
-                        
-                        if notificationsEnabled {
-                            DatePicker("Reminder Time", selection: $reminderTime, displayedComponents: .hourAndMinute)
-                        }
+                    Toggle("Enable Notifications", isOn: $notificationsEnabled)
+                    if notificationsEnabled {
+                        DatePicker("Reminder Time", selection: $reminderTime, displayedComponents: .hourAndMinute)
                     }
-                    
-                    Section(header: Text("About")) {
-                        HStack {
-                            Text("Version")
-                            Spacer()
-                            Text("1.0.0")
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        NavigationLink(destination: PrivacyPolicyView()) {
-                            Text("Privacy Policy")
-                        }
-                        
-                        Button("Rate the App") {
-                            // Link to App Store review
-                        }
+                }
+                Section(header: Text("About")) {
+                    HStack {
+                        Text("Version")
+                        Spacer()
+                        Text("1.0.0")
+                            .foregroundColor(.secondary)
+                    }
+                    NavigationLink(destination: PrivacyPolicyView()) {
+                        Text("Privacy Policy")
+                    }
+                    Button("Rate the App") {
+                        // Link to App Store review
                     }
                 }
             }
@@ -74,3 +70,4 @@ struct SettingsView: View {
             .navigationTitle("Privacy Policy")
         }
     }
+}
