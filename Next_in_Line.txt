@@ -1,0 +1,7 @@
+I wants to redesign the app's navigation flow. Instead of starting with a list of exercises, they want the first page to show the main exercise categories (Strength Training, Cardio, Flexibility, Bodyweight, and Functional). Then:
+First level: Categories (Strength Training, Cardio, etc.)
+Second level: Specific workouts under each category
+Third level: Logging actual exercise data for a specific workout on a specific day
+I'll need to redesign the main navigation flow and create new views to support this structure.
+
+ 
