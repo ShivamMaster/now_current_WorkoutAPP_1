@@ -3,8 +3,6 @@ import SwiftUI
 struct SettingsView: View {
     @ObservedObject private var themeManager = ThemeManager.shared
     @AppStorage("weightUnit") private var weightUnit: String = "kg"
-    @State private var notificationsEnabled = true
-    @State private var reminderTime = Calendar.current.date(bySettingHour: 19, minute: 0, second: 0, of: Date())!
     
     let weightUnits = ["kg", "lbs"]
     
@@ -21,12 +19,6 @@ struct SettingsView: View {
                         .onChange(of: themeManager.isDarkMode) { value in
                             themeManager.themeMode = value ? .dark : .light
                         }
-                }
-                Section(header: Text("Reminders")) {
-                    Toggle("Enable Notifications", isOn: $notificationsEnabled)
-                    if notificationsEnabled {
-                        DatePicker("Reminder Time", selection: $reminderTime, displayedComponents: .hourAndMinute)
-                    }
                 }
                 Section(header: Text("About")) {
                     HStack {
