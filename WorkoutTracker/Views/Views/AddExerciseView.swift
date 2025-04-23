@@ -4,6 +4,9 @@ struct AddExerciseView: View {
     @EnvironmentObject private var dataManager: DataManager
     @Environment(\.presentationMode) var presentationMode
     
+    // Add this line to get the user's preferred weight unit
+    @AppStorage("weightUnit") private var weightUnit: String = "kg"
+    
     let workout: WorkoutModel
     
     @State private var name = ""
@@ -90,7 +93,8 @@ struct AddExerciseView: View {
                             }
                         case "Weight (kg)":
                             HStack {
-                                Text("Weight (kg)")
+                                // Change label to use the preferred unit
+                                Text("Weight (\(weightUnit))")
                                 Spacer()
                                 TextField("Weight", text: $weight)
                                     .keyboardType(.decimalPad)
@@ -227,4 +231,4 @@ struct ExerciseListView: View {
             })
         }
     }
-} 
+}
