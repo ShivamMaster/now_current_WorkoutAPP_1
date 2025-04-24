@@ -76,10 +76,10 @@ struct PrivacyPolicyView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 15) {
-                Text("Privacy Policy")
-                    .font(.largeTitle)
-                    .bold()
-                    .padding(.bottom, 10)
+                // Text("Privacy Policy")
+                //     .font(.largeTitle)
+                //     .bold()
+                //     .padding(.bottom, 10)
                 
                 Text("This app does not collect any personal data. All workout information is stored locally on your device and is not transmitted to any external servers.")
                 
