@@ -45,9 +45,9 @@ struct SettingsView: View {
                             Text("Privacy Policy")
                         }
                         
-                        Button("Rate the App") {
-                            // Link to App Store review
-                        }
+                        // Button("Rate the App") {
+                        //     // Link to App Store review
+                        // }
                     }header: {
                         Text("About")
                     }

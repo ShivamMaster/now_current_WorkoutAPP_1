@@ -30,9 +30,9 @@ struct SettingsView: View {
                     NavigationLink(destination: PrivacyPolicyView()) {
                         Text("Privacy Policy")
                     }
-                    Button("Rate the App") {
-                        // Link to App Store review
-                    }
+                    // Button("Rate the App") {
+                    //     // Link to App Store review
+                    // }
                 }
             }
             .navigationTitle("Settings")
