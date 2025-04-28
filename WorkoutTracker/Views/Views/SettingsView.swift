@@ -20,13 +20,6 @@ struct SettingsView: View {
                             themeManager.themeMode = value ? .dark : .light
                         }
                 }
-                
-                Section(header: Text("Activity")) {
-                    NavigationLink(destination: CalendarView()) {
-                        Text("Workout Calendar")
-                    }
-                }
-                
                 Section(header: Text("About")) {
                     HStack {
                         Text("Version")
