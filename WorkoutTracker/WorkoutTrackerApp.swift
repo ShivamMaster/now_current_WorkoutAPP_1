@@ -139,15 +139,58 @@ struct MainTabView: View {
 
 // Add this new view inside the same file
 struct SettingsView: View {
-    @EnvironmentObject private var themeManager: ThemeManager
+    @AppStorage("weightUnit") private var weightUnit: String = "kg"
+    @ObservedObject private var themeManager = ThemeManager.shared
+
+    let weightUnits = ["kg", "lbs"]
 
     var body: some View {
-        Form {
-            Section(header: Text("Calendar Color")) {
-                ColorPicker("Workout Day Color", selection: $themeManager.calendarBoxColor)
+        NavigationView {
+            List {
+                Section(header: Text("Preferences")) {
+                    Picker("Weight Unit", selection: $weightUnit) {
+                        ForEach(weightUnits, id: \.self) { unit in
+                            Text(unit)
+                        }
+                    }
+                    Toggle("Dark Mode", isOn: $themeManager.isDarkMode)
+                        .onChange(of: themeManager.isDarkMode) { value in
+                            themeManager.themeMode = value ? .dark : .light
+                        }
+                }
+                Section(header: Text("About")) {
+                    HStack {
+                        Text("Version")
+                        Spacer()
+                        Text("1.0.0")
+                            .foregroundColor(.secondary)
+                    }
+                    NavigationLink(destination: PrivacyPolicyView()) {
+                        Text("Privacy Policy")
+                    }
+                }
+                Section(header: Text("Calendar Color")) {
+                    ColorPicker("Workout Day Color", selection: $themeManager.calendarBoxColor)
+                }
             }
+            .navigationTitle("Settings")
+            .listStyle(.insetGrouped)
         }
-        .navigationTitle("Settings")
+    }
+}
+
+struct PrivacyPolicyView: View {
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 15) {
+                Text("This app does not collect any personal data. All workout information is stored locally on your device and is not transmitted to any external servers.")
+                Text("Workout data is only used within the app to display your progress and workout history.")
+                Text("The app does not use any analytics services, advertising frameworks, or other tracking mechanisms.")
+                Text("If you have any questions about our privacy practices, please contact us.")
+            }
+            .padding()
+        }
+        .navigationTitle("Privacy Policy")
     }
 }
 
