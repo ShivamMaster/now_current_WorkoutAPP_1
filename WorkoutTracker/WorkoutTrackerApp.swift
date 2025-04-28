@@ -17,29 +17,62 @@ enum AppThemeMode: String, CaseIterable, Identifiable {
     }
 }
 
+extension Color {
+    // Convert Color to hex string
+    func toHex() -> String? {
+        #if canImport(UIKit)
+        let uiColor = UIColor(self)
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        guard uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha) else { return nil }
+        let rgb: Int = (Int)(red*255)<<16 | (Int)(green*255)<<8 | (Int)(blue*255)<<0
+        return String(format:"#%06x", rgb)
+        #else
+        return nil
+        #endif
+    }
+    
+    // Create Color from hex string
+    init?(hex: String) {
+        var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+        hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
+        var rgb: UInt64 = 0
+        guard Scanner(string: hexSanitized).scanHexInt64(&rgb) else { return nil }
+        let r = Double((rgb & 0xFF0000) >> 16) / 255.0
+        let g = Double((rgb & 0x00FF00) >> 8) / 255.0
+        let b = Double(rgb & 0x0000FF) / 255.0
+        self.init(red: r, green: g, blue: b)
+    }
+}
+
 class ThemeManager: ObservableObject {
     static let shared = ThemeManager()
     
-    @Published var isDarkMode: Bool = false { // Added isDarkMode property
-        didSet {
-            UserDefaults.standard.set(themeMode.rawValue, forKey: "AppThemeMode")
-        }
-    }
-    
+    @Published var isDarkMode: Bool
+    @Published var calendarBoxColor: Color
+    @Published var themeMode: AppThemeMode
+
     init() {
+        // Set default values first
+        self.isDarkMode = false
+        self.themeMode = .system
+        self.calendarBoxColor = .blue
+
+        // Now safely use self to update properties
         if let savedTheme = UserDefaults.standard.string(forKey: "AppThemeMode"),
            let theme = AppThemeMode(rawValue: savedTheme) {
             self.themeMode = theme
-            self.isDarkMode = theme == .dark // Initialize isDarkMode
+            self.isDarkMode = theme == .dark
         } else {
-            self.isDarkMode = UIScreen.main.traitCollection.userInterfaceStyle == .dark
-            self.themeMode = self.isDarkMode ? .dark : .light
+            let dark = UIScreen.main.traitCollection.userInterfaceStyle == .dark
+            self.isDarkMode = dark
+            self.themeMode = dark ? .dark : .light
         }
-    }
-    
-    @Published var themeMode: AppThemeMode = .system {
-        didSet {
-            UserDefaults.standard.set(themeMode.rawValue, forKey: "AppThemeMode")
+        if let hex = UserDefaults.standard.string(forKey: "CalendarBoxColor"),
+           let color = Color(hex: hex) {
+            self.calendarBoxColor = color
         }
     }
 }
@@ -105,8 +138,22 @@ struct MainTabView: View {
 }
 
 // Add this new view inside the same file
+struct SettingsView: View {
+    @EnvironmentObject private var themeManager: ThemeManager
+
+    var body: some View {
+        Form {
+            Section(header: Text("Calendar Color")) {
+                ColorPicker("Workout Day Color", selection: $themeManager.calendarBoxColor)
+            }
+        }
+        .navigationTitle("Settings")
+    }
+}
+
 struct CalendarView: View {
     @EnvironmentObject private var dataManager: DataManager
+    @EnvironmentObject private var themeManager: ThemeManager
     private let calendar = Calendar.current
     private let columns = Array(repeating: GridItem(.fixed(18), spacing: 4), count: 7)
     private let monthSymbols = Calendar.current.monthSymbols
@@ -158,7 +205,7 @@ struct CalendarView: View {
                             // Day boxes
                             ForEach(days, id: \.self) { day in
                                 Rectangle()
-                                    .fill(workoutDays.contains(day) ? Color.blue : Color(.systemGray5))
+                                    .fill(workoutDays.contains(day) ? themeManager.calendarBoxColor : Color(.systemGray5))
                                     .frame(width: 18, height: 18)
                                     .cornerRadius(3)
                                     .overlay(
