@@ -183,23 +183,28 @@ struct AddExerciseView: View {
     private func saveExercise() {
         // Use the selected exercise name if available, otherwise use the custom name
         let exerciseName = selectedExercise.isEmpty ? name : selectedExercise
-        
+
         // Convert string values to appropriate types with safe defaults
         let setsValue = Int16(sets) ?? 0
         let repsValue = Int16(reps) ?? 0
-        let weightValue = Double(weight) ?? 0.0
+        var weightValue = Double(weight) ?? 0.0 // Keep as var for potential conversion
         let durationValue = Int16(duration) ?? 0
         let distanceValue = Double(distance) ?? 0.0
         let caloriesValue = Int16(calories) ?? 0
         let holdTimeValue = Int16(holdTime) ?? 0
-        
+
+        // Convert weight to KG if the user entered it in LBS
+        if weightUnit == "lbs" {
+            weightValue = weightValue * 0.453592 // Convert lbs to kg
+        }
+
         let _ = ExerciseModel.createExercise(
             context: dataManager.container.viewContext,
             name: exerciseName,
             exerciseType: selectedExerciseType,
             sets: setsValue,
             reps: repsValue,
-            weight: weightValue,
+            weight: weightValue, // Save the (potentially converted) kg value
             duration: durationValue,
             distance: distanceValue,
             calories: caloriesValue,
@@ -207,8 +212,10 @@ struct AddExerciseView: View {
             order: Int16(workout.exerciseArray.count),
             notes: notes.isEmpty ? nil : notes,
             workout: workout
+            // Add weightUnit parameter if your ExerciseModel supports it
+            // weightUnit: self.weightUnit // Example if ExerciseModel stores the unit
         )
-        
+
         dataManager.save()
         presentationMode.wrappedValue.dismiss()
     }

@@ -170,28 +170,67 @@ struct WorkoutDetailView: View {
 
 struct EnhancedExerciseRowView: View {
     let exercise: ExerciseModel
-    
+    @AppStorage("weightUnit") private var displayWeightUnit: String = "kg" // Access user preference
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            HStack {
+        HStack {
+            VStack(alignment: .leading) {
                 Text(exercise.name)
                     .font(.headline)
-                Spacer()
-                Text(exercise.exerciseTypeEnum.rawValue)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .padding(4)
-                    .background(
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color(.systemGray6))
-                    )
+                // Display primary metrics based on exercise type and user preference
+                Text(formattedPrimaryMetrics()) // Use a helper function
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
             }
-            
-            Text(exercise.primaryMetrics)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+            Spacer()
+            Image(systemName: "chevron.right")
+                .foregroundColor(.gray)
         }
-        .padding(.vertical, 5)
+        .padding(.vertical, 8)
+    }
+
+    // Helper function to format the primary metrics string
+    private func formattedPrimaryMetrics() -> String {
+        var metrics: [String] = []
+        let type = exercise.exerciseTypeEnum
+
+        if type.measurementFields.contains("Sets") && exercise.sets > 0 {
+            metrics.append("\(exercise.sets) set\(exercise.sets == 1 ? "" : "s")")
+        }
+        if type.measurementFields.contains("Reps") && exercise.reps > 0 {
+            metrics.append("\(exercise.reps) rep\(exercise.reps == 1 ? "" : "s")")
+        }
+        // Format weight based on user preference
+        if type.measurementFields.contains("Weight (kg)") && exercise.weight > 0 {
+             metrics.append(displayWeightString(weightInKg: exercise.weight, unit: displayWeightUnit))
+        }
+        if type.measurementFields.contains("Duration (min)") && exercise.duration > 0 {
+            metrics.append("\(exercise.duration) min")
+        }
+        if type.measurementFields.contains("Distance (km)") && exercise.distance > 0 {
+            metrics.append(String(format: "%.1f km", exercise.distance))
+        }
+         if type.measurementFields.contains("Calories") && exercise.calories > 0 {
+            metrics.append("\(exercise.calories) kcal")
+        }
+        if type.measurementFields.contains("Hold Time (sec)") && exercise.holdTime > 0 {
+            metrics.append("\(exercise.holdTime) sec")
+        }
+
+
+        // Join the relevant metrics with " x "
+        return metrics.joined(separator: " x ")
+    }
+
+    // Helper function to format weight (copied/adapted from ExerciseDetailView)
+    private func displayWeightString(weightInKg: Double, unit: String) -> String {
+        if unit == "lbs" {
+            let weightInLbs = weightInKg * 2.20462
+            // Use %g to remove trailing .0 if it's a whole number after conversion
+            return String(format: "%g lbs", weightInLbs)
+        } else {
+            return String(format: "%g kg", weightInKg)
+        }
     }
 }
 
