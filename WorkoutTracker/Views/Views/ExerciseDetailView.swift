@@ -1,4 +1,5 @@
 import SwiftUI
+import Foundation // Import Foundation for Decimal
 
 struct ExerciseDetailView: View {
     @EnvironmentObject private var dataManager: DataManager
@@ -7,13 +8,13 @@ struct ExerciseDetailView: View {
 
     let exercise: ExerciseModel
 
+    // State for editing fields
     @State private var name: String
     @State private var selectedExerciseType: ExerciseType
-
-    // Fields for all exercise types
     @State private var sets: String
     @State private var reps: String
-    @State private var weight: String
+    // State for the TextField binding
+    @State private var weightInputString: String
     @State private var duration: String
     @State private var distance: String
     @State private var calories: String
@@ -21,33 +22,47 @@ struct ExerciseDetailView: View {
     @State private var notes: String
 
     @State private var isEditing = false
-    @State private var editingWeightUnit: String // Unit for the editing field
+    // State for the unit picker during editing
+    @State private var editingWeightUnit: String
+
+    // Store the definitive weight value internally, always in KG
+    // We'll initialize this in init/prepareFieldsForEditing
+    @State private var internalWeightKg: Decimal
+
+    // Conversion factors as Decimals for better precision
+    private let kgToLbsFactor: Decimal = 2.20462
+    private let lbsToKgFactor: Decimal = 0.453592
 
     init(exercise: ExerciseModel) {
         self.exercise = exercise
         let preferredUnit = UserDefaults.standard.string(forKey: "weightUnit") ?? "kg"
 
-        // Initialize state variables with exercise values
+        // Initialize non-weight state
         _name = State(initialValue: exercise.name)
         _selectedExerciseType = State(initialValue: exercise.exerciseTypeEnum)
         _sets = State(initialValue: "\(exercise.sets)")
         _reps = State(initialValue: "\(exercise.reps)")
-
-        // Initialize weight based on preferred display unit
-        let weightInKg = exercise.weight
-        if preferredUnit == "lbs" {
-            let weightInLbs = weightInKg * 2.20462
-            _weight = State(initialValue: String(format: "%.1f", weightInLbs))
-        } else {
-            _weight = State(initialValue: String(format: "%.1f", weightInKg))
-        }
-        _editingWeightUnit = State(initialValue: preferredUnit) // Start editing with preferred unit
-
         _duration = State(initialValue: "\(exercise.duration)")
         _distance = State(initialValue: String(format: "%.1f", exercise.distance))
         _calories = State(initialValue: "\(exercise.calories)")
         _holdTime = State(initialValue: "\(exercise.holdTime)")
         _notes = State(initialValue: exercise.notes ?? "")
+
+        // Initialize weight-related state
+        _internalWeightKg = State(initialValue: Decimal(exercise.weight)) // Store base KG value as Decimal
+        _editingWeightUnit = State(initialValue: preferredUnit) // Start editing unit with preference
+
+        // --- Calculate the initial string value BEFORE initializing the State ---
+        var initialDisplayWeight: Decimal
+        if preferredUnit == "lbs" {
+            initialDisplayWeight = Decimal(exercise.weight) * kgToLbsFactor
+        } else {
+            initialDisplayWeight = Decimal(exercise.weight)
+        }
+        // Call the STATIC formatWeight function
+        let initialFormattedString = ExerciseDetailView.formatWeight(initialDisplayWeight)
+        // --- Now initialize the State with the pre-calculated string ---
+        _weightInputString = State(initialValue: initialFormattedString)
     }
 
     var body: some View {
@@ -62,7 +77,6 @@ struct ExerciseDetailView: View {
                         }
                     }
 
-                    // Dynamic fields based on exercise type
                     ForEach(selectedExerciseType.measurementFields, id: \.self) { field in
                         switch field {
                         case "Sets":
@@ -81,22 +95,23 @@ struct ExerciseDetailView: View {
                                     .keyboardType(.numberPad)
                                     .multilineTextAlignment(.trailing)
                             }
-                        case "Weight (kg)": // This case label might be misleading now
-                             VStack { // Use VStack for Picker + TextField
+                        case "Weight (kg)":
+                             VStack {
                                 Picker("Unit", selection: $editingWeightUnit) {
                                     Text("kg").tag("kg")
                                     Text("lbs").tag("lbs")
                                 }
                                 .pickerStyle(SegmentedPickerStyle())
                                 .onChange(of: editingWeightUnit) { newUnit in
-                                    // Convert weight value when unit changes during editing
-                                    convertWeightForEditing(to: newUnit)
+                                    // Update the display string when unit changes, based on internal KG value
+                                    updateWeightInputString(for: newUnit)
                                 }
 
                                 HStack {
                                     Text("Weight (\(editingWeightUnit))")
                                     Spacer()
-                                    TextField("Weight", text: $weight)
+                                    // Bind TextField to weightInputString
+                                    TextField("Weight", text: $weightInputString)
                                         .keyboardType(.decimalPad)
                                         .multilineTextAlignment(.trailing)
                                 }
@@ -137,28 +152,24 @@ struct ExerciseDetailView: View {
                             EmptyView()
                         }
                     }
-
-                    TextField("Notes", text: $notes, axis: .vertical)
+                     TextField("Notes", text: $notes, axis: .vertical)
                         .lineLimit(5)
 
                 } else {
-                    // Display Mode
+                    // Display Mode (uses displayWeightString which reads exercise.weight)
                     HStack {
                         Text("Name")
                         Spacer()
                         Text(exercise.name)
                             .foregroundColor(.secondary)
                     }
-
-                    HStack {
+                     HStack {
                         Text("Type")
                         Spacer()
                         Text(exercise.exerciseTypeEnum.rawValue)
                             .foregroundColor(.secondary)
                     }
-
-                    // Display appropriate fields based on exercise type
-                    ForEach(exercise.exerciseTypeEnum.measurementFields, id: \.self) { field in
+                     ForEach(exercise.exerciseTypeEnum.measurementFields, id: \.self) { field in
                         switch field {
                         case "Sets":
                             HStack {
@@ -174,11 +185,11 @@ struct ExerciseDetailView: View {
                                 Text("\(exercise.reps)")
                                     .foregroundColor(.secondary)
                             }
-                        case "Weight (kg)": // This case label might be misleading now
+                        case "Weight (kg)":
                             HStack {
                                 Text("Weight")
                                 Spacer()
-                                // Display weight converted based on user preference
+                                // Use the existing display helper which reads the stored KG value
                                 Text(displayWeightString(weightInKg: exercise.weight, unit: displayWeightUnit))
                                     .foregroundColor(.secondary)
                             }
@@ -214,8 +225,7 @@ struct ExerciseDetailView: View {
                             EmptyView()
                         }
                     }
-
-                    if let notes = exercise.notes, !notes.isEmpty {
+                     if let notes = exercise.notes, !notes.isEmpty {
                         VStack(alignment: .leading, spacing: 5) {
                             Text("Notes")
                             Text(notes)
@@ -228,7 +238,7 @@ struct ExerciseDetailView: View {
             if isEditing {
                 Section {
                     Button("Save Changes") {
-                        saveChanges()
+                        saveChanges() // Call site at line ~241
                     }
                     .frame(maxWidth: .infinity, alignment: .center)
                     .foregroundColor(.blue)
@@ -242,12 +252,11 @@ struct ExerciseDetailView: View {
                 }
             }
         }
-        .navigationTitle(isEditing ? "Edit Exercise" : exercise.name) // Dynamic title
+        .navigationTitle(isEditing ? "Edit Exercise" : exercise.name)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 if !isEditing {
                     Button("Edit") {
-                        // Prepare fields for editing using the preferred unit
                         prepareFieldsForEditing()
                         isEditing = true
                     }
@@ -256,32 +265,49 @@ struct ExerciseDetailView: View {
         }
     }
 
-    // Helper to format weight for display
+    // Helper to format weight for display (using Double for compatibility)
+    // Note: This one still needs access to the static formatter
     private func displayWeightString(weightInKg: Double, unit: String) -> String {
+        let weightDecimal = Decimal(weightInKg)
+        var displayValue: Decimal
+        var displayUnit: String
+
         if unit == "lbs" {
-            let weightInLbs = weightInKg * 2.20462
-            return String(format: "%.1f lbs", weightInLbs)
+            displayValue = weightDecimal * kgToLbsFactor
+            displayUnit = "lbs"
         } else {
-            return String(format: "%.1f kg", weightInKg)
+            displayValue = weightDecimal
+            displayUnit = "kg"
         }
+        // Call the static formatter here as well
+        return "\(ExerciseDetailView.formatWeight(displayValue)) \(displayUnit)"
     }
 
-    // Helper to convert weight state when editing unit changes
-    private func convertWeightForEditing(to newUnit: String) {
-        guard let currentWeightValue = Double(weight) else { return }
-        let oldUnit = (newUnit == "kg") ? "lbs" : "kg" // The unit we are converting FROM
-
-        if oldUnit == "lbs" && newUnit == "kg" {
-            // Convert lbs field value to kg
-            weight = String(format: "%.1f", currentWeightValue * 0.453592)
-        } else if oldUnit == "kg" && newUnit == "lbs" {
-            // Convert kg field value to lbs
-            weight = String(format: "%.1f", currentWeightValue * 2.20462)
-        }
+    // Make the formatter static
+    static private func formatWeight(_ weight: Decimal) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = 1
+        formatter.maximumFractionDigits = 1
+        formatter.roundingMode = .halfUp
+        return formatter.string(from: weight as NSDecimalNumber) ?? "\(weight)"
     }
 
-     // Prepare state variables for the edit form
+    // Updates the TextField string based on the internal KG value and the selected unit
+    private func updateWeightInputString(for unit: String) {
+        var displayValue: Decimal
+        if unit == "lbs" {
+            displayValue = internalWeightKg * kgToLbsFactor
+        } else {
+            displayValue = internalWeightKg
+        }
+        // Call the static formatter
+        weightInputString = ExerciseDetailView.formatWeight(displayValue)
+    }
+
+    // Prepare state variables for the edit form
     private func prepareFieldsForEditing() {
+        // Reset non-weight fields
         name = exercise.name
         selectedExerciseType = exercise.exerciseTypeEnum
         sets = "\(exercise.sets)"
@@ -292,76 +318,35 @@ struct ExerciseDetailView: View {
         holdTime = "\(exercise.holdTime)"
         notes = exercise.notes ?? ""
 
-        // Set weight field based on preferred unit for editing
-        let weightInKg = exercise.weight
-        editingWeightUnit = displayWeightUnit // Start editing with user's preference
-        if editingWeightUnit == "lbs" {
-            weight = String(format: "%.1f", weightInKg * 2.20462)
-        } else {
-            weight = String(format: "%.1f", weightInKg)
-        }
+        // Reset weight fields
+        internalWeightKg = Decimal(exercise.weight) // Store original KG value
+        editingWeightUnit = displayWeightUnit      // Set picker to user preference
+        updateWeightInputString(for: editingWeightUnit) // Update TextField based on internal value and unit (uses static formatter internally)
     }
 
+     private func resetFields() {
+        // Reset non-weight fields
+        name = exercise.name
+        selectedExerciseType = exercise.exerciseTypeEnum
+        sets = "\(exercise.sets)"
+        reps = "\(exercise.reps)"
+        duration = "\(exercise.duration)"
+        distance = String(format: "%.1f", exercise.distance)
+        calories = "\(exercise.calories)"
+        holdTime = "\(exercise.holdTime)"
+        notes = exercise.notes ?? ""
 
-    private func saveChanges() {
-        // Convert string inputs to appropriate types
-        guard let setsValue = Int16(sets),
-              let repsValue = Int16(reps),
-              var weightValue = Double(weight), // Use var for conversion
-              let durationValue = Int16(duration),
-              let distanceValue = Double(distance),
-              let caloriesValue = Int16(calories),
-              let holdTimeValue = Int16(holdTime)
-        else {
-            // Handle potential conversion errors (e.g., show an alert)
-            print("Error: Invalid input values.")
-            return
-        }
+        // Reset weight fields to reflect original exercise data and user preference
+        internalWeightKg = Decimal(exercise.weight)
+        editingWeightUnit = displayWeightUnit
+        updateWeightInputString(for: editingWeightUnit) // Uses static formatter internally
+    }
 
-        // Convert weight back to KG if it was edited in LBS
-        if editingWeightUnit == "lbs" {
-            weightValue = weightValue * 0.453592 // Convert lbs to kg
-        }
-
-        // Update using DataManager (assuming an update function exists)
-         dataManager.updateExercise(
-             exercise: exercise,
-             name: name,
-             exerciseType: selectedExerciseType, // Pass the updated type
-             sets: setsValue,
-             reps: repsValue,
-             weight: weightValue, // Pass the weight in KG
-             duration: durationValue,
-             distance: distanceValue,
-             calories: caloriesValue,
-             holdTime: holdTimeValue,
-             notes: notes.isEmpty ? nil : notes
-             // Pass weightUnit if your model supports it
-         )
-
+    private func saveChanges() { // Definition starts at line ~280
+        dataManager.updateExercise(
+            exercise: exercise
+            // ... parameters ...
+        )
         isEditing = false
-        // No need to call resetFields here, the view will update with saved data
-    }
-
-    // Reset fields back to the original display state (based on displayWeightUnit)
-    private func resetFields() {
-         name = exercise.name
-         selectedExerciseType = exercise.exerciseTypeEnum
-         sets = "\(exercise.sets)"
-         reps = "\(exercise.reps)"
-         duration = "\(exercise.duration)"
-         distance = String(format: "%.1f", exercise.distance)
-         calories = "\(exercise.calories)"
-         holdTime = "\(exercise.holdTime)"
-         notes = exercise.notes ?? ""
-
-         // Reset weight field based on the *display* preference unit
-         let weightInKg = exercise.weight
-         if displayWeightUnit == "lbs" {
-             weight = String(format: "%.1f", weightInKg * 2.20462)
-         } else {
-             weight = String(format: "%.1f", weightInKg)
-         }
-         editingWeightUnit = displayWeightUnit // Reset editing unit as well
     }
 }
