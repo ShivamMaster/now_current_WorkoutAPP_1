@@ -201,12 +201,19 @@ struct CalendarView: View {
     private let columns = Array(repeating: GridItem(.fixed(18), spacing: 4), count: 7)
     private let monthSymbols = Calendar.current.monthSymbols
 
-    // Helper to get all workout days as startOfDay
+    @State private var yearInput: String = "\(Calendar.current.component(.year, from: Date()))"
+    @State private var selectedYear: Int = Calendar.current.component(.year, from: Date())
+
+    // Helper to get all workout days as startOfDay for the selected year
     private var workoutDays: Set<Date> {
-        Set(dataManager.workouts.map { calendar.startOfDay(for: $0.date) })
+        Set(
+            dataManager.workouts
+                .filter { calendar.component(.year, from: $0.date) == selectedYear }
+                .map { calendar.startOfDay(for: $0.date) }
+        )
     }
 
-    // Helper to get all days in a given month of the current year
+    // Helper to get all days in a given month of the selected year
     private func daysInMonth(month: Int, year: Int) -> [Date] {
         var days: [Date] = []
         let components = DateComponents(year: year, month: month)
@@ -223,7 +230,31 @@ struct CalendarView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                let year = calendar.component(.year, from: Date())
+                // Centered, editable year input
+                HStack {
+                    Spacer()
+                    HStack(spacing: 8) {
+                        Text("Year:")
+                            .font(.headline)
+                        TextField("Year", text: $yearInput)
+                            .keyboardType(.numberPad)
+                            .frame(width: 70)
+                            .multilineTextAlignment(.center)
+                            .onSubmit {
+                                if let year = Int(yearInput), year > 0 {
+                                    selectedYear = year
+                                }
+                            }
+                            .onChange(of: yearInput) { newValue in
+                                if let year = Int(newValue), year > 0 {
+                                    selectedYear = year
+                                }
+                            }
+                    }
+                    Spacer()
+                }
+                .padding(.bottom, 8)
+
                 ForEach(1...12, id: \.self) { month in
                     VStack(alignment: .leading, spacing: 8) {
                         Text(monthSymbols[month - 1])
@@ -238,7 +269,7 @@ struct CalendarView: View {
                                     .foregroundColor(.secondary)
                             }
                             // Padding for first weekday
-                            let days = daysInMonth(month: month, year: year)
+                            let days = daysInMonth(month: month, year: selectedYear)
                             if let first = days.first {
                                 let weekday = calendar.component(.weekday, from: first)
                                 ForEach(0..<(weekday - 1), id: \.self) { _ in
