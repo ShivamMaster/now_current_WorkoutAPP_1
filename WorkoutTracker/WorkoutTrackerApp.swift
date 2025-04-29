@@ -50,17 +50,38 @@ extension Color {
 class ThemeManager: ObservableObject {
     static let shared = ThemeManager()
     
-    @Published var isDarkMode: Bool
-    @Published var calendarBoxColor: Color
-    @Published var themeMode: AppThemeMode
+    @Published var isDarkMode: Bool {
+        didSet {
+            // Save dark mode toggle and theme mode
+            UserDefaults.standard.set(isDarkMode, forKey: "isDarkMode")
+            // Update themeMode accordingly
+            let newMode: AppThemeMode = isDarkMode ? .dark : .light
+            if themeMode != newMode {
+                themeMode = newMode
+            }
+        }
+    }
+    @Published var calendarBoxColor: Color {
+        didSet {
+            if let hex = calendarBoxColor.toHex() {
+                UserDefaults.standard.set(hex, forKey: "CalendarBoxColor")
+            }
+        }
+    }
+    @Published var themeMode: AppThemeMode {
+        didSet {
+            UserDefaults.standard.set(themeMode.rawValue, forKey: "AppThemeMode")
+            // Update isDarkMode accordingly
+            let shouldBeDark = themeMode == .dark
+            if isDarkMode != shouldBeDark {
+                isDarkMode = shouldBeDark
+            }
+        }
+    }
 
     init() {
         // Set default values first
-        self.isDarkMode = false
-        self.themeMode = .system
-        self.calendarBoxColor = .blue
-
-        // Now safely use self to update properties
+        self.isDarkMode = UserDefaults.standard.bool(forKey: "isDarkMode")
         if let savedTheme = UserDefaults.standard.string(forKey: "AppThemeMode"),
            let theme = AppThemeMode(rawValue: savedTheme) {
             self.themeMode = theme
@@ -73,6 +94,8 @@ class ThemeManager: ObservableObject {
         if let hex = UserDefaults.standard.string(forKey: "CalendarBoxColor"),
            let color = Color(hex: hex) {
             self.calendarBoxColor = color
+        } else {
+            self.calendarBoxColor = .blue
         }
     }
 }
