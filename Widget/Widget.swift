@@ -58,8 +58,9 @@ struct WidgetEntryView : View {
             HStack(spacing: 0) {
                 ForEach(daysOfWeek, id: \.self) { day in
                     Text(day)
-                        .font(.caption)
+                        .font(.caption2)
                         .frame(maxWidth: .infinity)
+                        .minimumScaleFactor(0.8)
                 }
             }
 
@@ -97,7 +98,7 @@ struct WidgetEntryView : View {
             }
             Spacer()
         }
-        .padding()
+        .padding(.vertical) // Removed horizontal padding, keep vertical
         // End of restored VStack
     }
 
