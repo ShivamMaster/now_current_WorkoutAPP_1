@@ -70,23 +70,27 @@ struct WidgetEntryView : View {
             let numberOfRows = Int(ceil(Double(totalCells) / 7.0))
 
             ForEach(0..<numberOfRows, id: \.self) { row in
-                HStack(spacing: 0) {
+                HStack(spacing: 0) { // Reduced spacing
                     ForEach(1...7, id: \.self) { col in
                         let dayIndex = row * 7 + col - firstDayWeekday
                         if dayIndex >= 0 && dayIndex < days.count {
                             let day = days[dayIndex]
                             let isWorkoutDay = entry.workoutDays.contains(day)
                             Text("\(day)")
-                                .font(.caption)
+                                .font(.caption2) // Smaller font for day numbers
                                 .frame(maxWidth: .infinity)
-                                .padding(2)
-                                .background(isWorkoutDay ? Color.green.opacity(0.3) : Color.clear)
-                                .clipShape(Circle())
+                                .padding(1) // Reduced padding around numbers
+                                // Use accent color for background and make it boxy
+                                .background(isWorkoutDay ? Color.accentColor.opacity(0.6) : Color.clear)
+                                .clipShape(RoundedRectangle(cornerRadius: 3)) // Boxier shape
                                 .foregroundColor(isToday(day: day) ? .red : .primary)
+                                .minimumScaleFactor(0.6) // Allow text to shrink slightly if needed
                         } else {
+                            // Keep empty text for alignment
                             Text("")
+                                .font(.caption2) // Match font size
                                 .frame(maxWidth: .infinity)
-                                .padding(2)
+                                .padding(1) // Match padding
                         }
                     }
                 }
