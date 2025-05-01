@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <!-- Ensure this matches the target setting -->
+    <string>com.HiraGoel.WorkoutTracker.Widget</string>
+    <key>NSExtension</key>
+    <dict>
+        <key>NSExtensionPointIdentifier</key>
+        <string>com.apple.widgetkit-extension</string>
+        <key>NSExtensionAttributes</key>
+        <dict>
+            <!-- Ensure this matches the 'kind' in Widget.swift -->
+            <key>WidgetKind</key>
+            <string>WorkoutCalendarWidget</string>
+        </dict>
+    </dict>
+</dict>
+</plist>

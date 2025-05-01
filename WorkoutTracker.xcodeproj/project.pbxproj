@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -20,7 +20,44 @@
 		1A2B3C4D5E6F7G8H9I0J1A2V /* Views/SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2W /* Views/SettingsView.swift */; };
 		1A2B3C4D5E6F7G8H9I0J1A2X /* Models/WorkoutTracker.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2Y /* Models/WorkoutTracker.xcdatamodeld */; };
 		D465C28E2DB8608D003498CD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D465C28C2DB8608D003498CD /* Assets.xcassets */; };
+		D4DF66F82DC2AB1500CAEE1C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4DF66C62DC2A85000CAEE1C /* WidgetKit.framework */; };
+		D4DF66F92DC2AB1500CAEE1C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4DF66C82DC2A85000CAEE1C /* SwiftUI.framework */; };
+		D4DF670A2DC2AB1700CAEE1C /* WidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D4DF66F72DC2AB1500CAEE1C /* WidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D4DF67082DC2AB1700CAEE1C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1A2B3C4D5E6F7G8H9I0J1A3M /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D4DF66F62DC2AB1500CAEE1C;
+			remoteInfo = WidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D40D73A02DC3B32100610646 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4DF66DB2DC2A85100CAEE1C /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				D4DF670A2DC2AB1700CAEE1C /* WidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		1A2B3C4D5E6F7G8H9I0J1A2A /* WorkoutTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WorkoutTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -38,13 +75,39 @@
 		1A2B3C4D5E6F7G8H9I0J1A2Z /* WorkoutTracker.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = file.xcdatamodel; path = WorkoutTracker.xcdatamodel; sourceTree = "<group>"; };
 		D465C28C2DB8608D003498CD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D465C28D2DB8608D003498CD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D4DF66C62DC2A85000CAEE1C /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		D4DF66C82DC2A85000CAEE1C /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		D4DF66F72DC2AB1500CAEE1C /* WidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D4DF670B2DC2AB1700CAEE1C /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D4DF66F62DC2AB1500CAEE1C /* WidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		D4DF66FA2DC2AB1500CAEE1C /* Widget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (D4DF670B2DC2AB1700CAEE1C /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Widget; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		1A2B3C4D5E6F7G8H9I0J1A3A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4DF66F42DC2AB1500CAEE1C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D4DF66F92DC2AB1500CAEE1C /* SwiftUI.framework in Frameworks */,
+				D4DF66F82DC2AB1500CAEE1C /* WidgetKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -55,6 +118,7 @@
 			isa = PBXGroup;
 			children = (
 				1A2B3C4D5E6F7G8H9I0J1A2A /* WorkoutTracker.app */,
+				D4DF66F72DC2AB1500CAEE1C /* WidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -65,8 +129,6 @@
 				1A2B3C4D5E6F7G8H9I0J1A2C /* WorkoutTrackerApp.swift */,
 				1A2B3C4D5E6F7G8H9I0J1A3D /* Models */,
 				1A2B3C4D5E6F7G8H9I0J1A3E /* Views */,
-				1A2B3C4D5E6F7G8H9I0J1A3F /* ViewModels */,
-				1A2B3C4D5E6F7G8H9I0J1A3G /* Utilities */,
 			);
 			path = WorkoutTracker;
 			sourceTree = "<group>";
@@ -96,28 +158,25 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
-		1A2B3C4D5E6F7G8H9I0J1A3F /* ViewModels */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = ViewModels;
-			sourceTree = "<group>";
-		};
-		1A2B3C4D5E6F7G8H9I0J1A3G /* Utilities */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Utilities;
-			sourceTree = "<group>";
-		};
 		1A2B3C4D5E6F7G8H9I0J1A3H = {
 			isa = PBXGroup;
 			children = (
 				D465C28C2DB8608D003498CD /* Assets.xcassets */,
 				D465C28D2DB8608D003498CD /* Info.plist */,
 				1A2B3C4D5E6F7G8H9I0J1A3C /* WorkoutTracker */,
+				D4DF66FA2DC2AB1500CAEE1C /* Widget */,
+				D4DF66C52DC2A85000CAEE1C /* Frameworks */,
 				1A2B3C4D5E6F7G8H9I0J1A3B /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		D4DF66C52DC2A85000CAEE1C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D4DF66C62DC2A85000CAEE1C /* WidgetKit.framework */,
+				D4DF66C82DC2A85000CAEE1C /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -130,15 +189,40 @@
 				1A2B3C4D5E6F7G8H9I0J1A3K /* Sources */,
 				1A2B3C4D5E6F7G8H9I0J1A3A /* Frameworks */,
 				1A2B3C4D5E6F7G8H9I0J1A3L /* Resources */,
+				D4DF66DB2DC2A85100CAEE1C /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				D4DF67092DC2AB1700CAEE1C /* PBXTargetDependency */,
 			);
 			name = WorkoutTracker;
 			productName = WorkoutTracker;
 			productReference = 1A2B3C4D5E6F7G8H9I0J1A2A /* WorkoutTracker.app */;
 			productType = "com.apple.product-type.application";
+		};
+		D4DF66F62DC2AB1500CAEE1C /* WidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D4DF670C2DC2AB1700CAEE1C /* Build configuration list for PBXNativeTarget "WidgetExtension" */;
+			buildPhases = (
+				D4DF66F32DC2AB1500CAEE1C /* Sources */,
+				D4DF66F42DC2AB1500CAEE1C /* Frameworks */,
+				D4DF66F52DC2AB1500CAEE1C /* Resources */,
+				D40D73A02DC3B32100610646 /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D4DF66FA2DC2AB1500CAEE1C /* Widget */,
+			);
+			name = WidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = WidgetExtension;
+			productReference = D4DF66F72DC2AB1500CAEE1C /* WidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -147,11 +231,14 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1500;
+				LastSwiftUpdateCheck = 1620;
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					1A2B3C4D5E6F7G8H9I0J1A3I = {
 						CreatedOnToolsVersion = 15.0;
+					};
+					D4DF66F62DC2AB1500CAEE1C = {
+						CreatedOnToolsVersion = 16.2;
 					};
 				};
 			};
@@ -169,6 +256,7 @@
 			projectRoot = "";
 			targets = (
 				1A2B3C4D5E6F7G8H9I0J1A3I /* WorkoutTracker */,
+				D4DF66F62DC2AB1500CAEE1C /* WidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -179,6 +267,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				D465C28E2DB8608D003498CD /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4DF66F52DC2AB1500CAEE1C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -204,7 +299,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D4DF66F32DC2AB1500CAEE1C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D4DF67092DC2AB1700CAEE1C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D4DF66F62DC2AB1500CAEE1C /* WidgetExtension */;
+			targetProxy = D4DF67082DC2AB1700CAEE1C /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		1A2B3C4D5E6F7G8H9I0J1A3O /* Debug */ = {
@@ -337,11 +447,12 @@
 				DEVELOPMENT_TEAM = 7VJZ58KYD5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Progress Buddy";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -366,11 +477,12 @@
 				DEVELOPMENT_TEAM = 7VJZ58KYD5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Progress Buddy";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -378,6 +490,62 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.HiraGoel.WorkoutTracker;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		D4DF670D2DC2AB1700CAEE1C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7VJZ58KYD5;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Widget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Widget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.HiraGoel.WorkoutTracker.Widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D4DF670E2DC2AB1700CAEE1C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7VJZ58KYD5;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Widget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Widget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.HiraGoel.WorkoutTracker.Widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -401,6 +569,15 @@
 			buildConfigurations = (
 				1A2B3C4D5E6F7G8H9I0J1A3O /* Debug */,
 				1A2B3C4D5E6F7G8H9I0J1A3P /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D4DF670C2DC2AB1700CAEE1C /* Build configuration list for PBXNativeTarget "WidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4DF670D2DC2AB1700CAEE1C /* Debug */,
+				D4DF670E2DC2AB1700CAEE1C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
