@@ -226,6 +226,8 @@ struct CalendarView: View {
 
     @State private var yearInput: String = "\(Calendar.current.component(.year, from: Date()))"
     @State private var selectedYear: Int = Calendar.current.component(.year, from: Date())
+    @FocusState private var isYearFieldFocused: Bool
+    @State private var tempYearInput: String = ""
 
     // Helper to get all workout days as startOfDay for the selected year
     private var workoutDays: Set<Date> {
@@ -253,26 +255,44 @@ struct CalendarView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                // Centered, editable year input
+                // Centered, editable year input with box and buttons
                 HStack {
                     Spacer()
-                    HStack(spacing: 8) {
-                        Text("Year:")
-                            .font(.headline)
-                        TextField("Year", text: $yearInput)
-                            .keyboardType(.numberPad)
-                            .frame(width: 70)
-                            .multilineTextAlignment(.center)
-                            .onSubmit {
-                                if let year = Int(yearInput), year > 0 {
-                                    selectedYear = year
+                    VStack(spacing: 4) {
+                        HStack(spacing: 8) {
+                            Text("Year:")
+                                .font(.headline)
+                            TextField("Year", text: $yearInput)
+                                .keyboardType(.numberPad)
+                                .frame(width: 70)
+                                .multilineTextAlignment(.center)
+                                .focused($isYearFieldFocused)
+                                .onTapGesture {
+                                    tempYearInput = yearInput
                                 }
-                            }
-                            .onChange(of: yearInput) { newValue in
-                                if let year = Int(newValue), year > 0 {
-                                    selectedYear = year
+                        }
+                        .padding(8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.accentColor, lineWidth: 2)
+                        )
+                        if isYearFieldFocused {
+                            HStack(spacing: 16) {
+                                Button("Done") {
+                                    if let year = Int(yearInput), year > 0 {
+                                        selectedYear = year
+                                    }
+                                    isYearFieldFocused = false
                                 }
+                                .buttonStyle(.borderedProminent)
+                                Button("Cancel") {
+                                    yearInput = tempYearInput
+                                    isYearFieldFocused = false
+                                }
+                                .buttonStyle(.bordered)
                             }
+                            .padding(.top, 4)
+                        }
                     }
                     Spacer()
                 }
