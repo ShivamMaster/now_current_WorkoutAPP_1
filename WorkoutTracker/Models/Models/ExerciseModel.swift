@@ -21,7 +21,7 @@ enum ExerciseType: String, CaseIterable, Identifiable {
         case .flexibility:
             return ["Duration (min)", "Sets", "Hold Time (sec)"]
         case .bodyweight:
-            return ["Sets", "Reps"]
+            return ["Set^s", "Reps"]
         case .functional:
             return ["Sets", "Reps", "Weight (kg)"]
         }

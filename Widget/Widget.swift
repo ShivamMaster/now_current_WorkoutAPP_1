@@ -1,5 +1,6 @@
 import WidgetKit
 import SwiftUI
+import CoreData // Import CoreData
 
 // Restore your original SimpleEntry definition
 struct SimpleEntry: TimelineEntry {
@@ -24,20 +25,157 @@ struct Provider: TimelineProvider {
     func getTimeline(in context: Context, completion: @escaping (Timeline<SimpleEntry>) -> ()) {
         // Restore your timeline logic (including fetchWorkoutDays)
         let currentDate = Date()
-        let startOfMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: currentDate))!
-        let workoutDays = fetchWorkoutDays(for: startOfMonth)
+        // Use Calendar.current consistently
+        let calendar = Calendar.current
+        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: currentDate))!
+        let workoutDays = fetchWorkoutDays(for: startOfMonth) // Fetch data using the updated function
 
         let entry = SimpleEntry(date: currentDate, currentMonthDate: startOfMonth, workoutDays: workoutDays)
 
-        let nextUpdateDate = Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.startOfDay(for: currentDate))!
+        // Calculate next update time (e.g., start of next day)
+        let nextUpdateDate = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: currentDate))!
         let timeline = Timeline(entries: [entry], policy: .after(nextUpdateDate))
         completion(timeline)
     }
 
-    // Restore your fetchWorkoutDays function
+    // Updated function to fetch directly from Core Data
     private func fetchWorkoutDays(for month: Date) -> Set<Int> {
-        // Placeholder data or your actual fetching logic
-        return [3, 8, 21]
+        print("WIDGET DEBUG: Starting fetchWorkoutDays for month: \(month)")
+        
+        guard let context = getSharedManagedObjectContext() else {
+            print("WIDGET DEBUG: Failed to get shared Core Data context.")
+            return []
+        }
+        print("WIDGET DEBUG: Got shared context successfully")
+
+        let calendar = Calendar.current
+        let request: NSFetchRequest<WorkoutModel> = NSFetchRequest<WorkoutModel>(entityName: "Workout")
+
+        // Create date range for the beginning and end of the month
+        var components = calendar.dateComponents([.year, .month], from: month)
+        guard let startOfMonth = calendar.date(from: components) else {
+            print("WIDGET DEBUG: Could not calculate start of month.")
+            return []
+        }
+        
+        // Calculate end of month more reliably - Split into two guards
+        guard let nextMonth = calendar.date(byAdding: .month, value: 1, to: startOfMonth) else {
+             print("WIDGET DEBUG: Could not calculate next month.")
+             return []
+        }
+        // Calculate the actual last day of the target month
+        guard let endOfMonthDate = calendar.date(byAdding: .day, value: -1, to: nextMonth) else {
+            print("WIDGET DEBUG: Could not calculate end of month date from next month.")
+            return []
+        }
+        
+        // Adjust end of month to be the very end of the day for comparison
+        let startOfDay = calendar.startOfDay(for: endOfMonthDate)
+        guard let startOfNextDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else {
+            print("WIDGET DEBUG: Could not calculate start of the day after end of month.")
+            return []
+        }
+        
+        // Calculate end of day separately
+        guard let endOfDayOfMonth = calendar.date(byAdding: .second, value: -1, to: startOfNextDay) else {
+             print("WIDGET DEBUG: Could not calculate end of day for end of month using alternative method.")
+             return []
+        }
+
+        print("WIDGET DEBUG: Date range: \(startOfMonth) to \(endOfDayOfMonth)")
+
+        // Filter workouts within the specified month
+        request.predicate = NSPredicate(format: "date >= %@ AND date <= %@", startOfMonth as NSDate, endOfDayOfMonth as NSDate)
+
+        do {
+            // Perform fetch on the background context for safety in extensions
+            let workoutsInMonth = try context.fetch(request)
+            print("WIDGET DEBUG: Fetched \(workoutsInMonth.count) workouts")
+            
+            // Detailed logging of each workout
+            for (index, workout) in workoutsInMonth.enumerated() {
+                print("WIDGET DEBUG: Workout \(index): date = \(workout.date), name = \(workout.name)")
+            }
+            
+            // let days = workoutsInMonth.compactMap { workout -> Int? in
+            //     guard let date = workout.date else { return nil }
+            //     let day = calendar.component(.day, from: date)
+            //     print("WIDGET DEBUG: Extracted day \(day) from workout date \(date)")
+            //     return day
+            // }
+
+            let days = workoutsInMonth.compactMap { workout -> Int? in
+                let day = calendar.component(.day, from: workout.date) // Directly use workout.date
+                print("WIDGET DEBUG: Extracted day \(day) from workout date \(workout.date)")
+                return day
+            }
+            
+            let daySet = Set(days)
+            print("WIDGET DEBUG: Final workout days set: \(daySet)")
+            return daySet
+        } catch {
+            print("WIDGET DEBUG: Error fetching workouts from Core Data: \(error.localizedDescription)")
+            return []
+        }
+    }
+
+    // Placeholder for the function that provides the shared context.
+    // This needs proper implementation within the widget target.
+    private func getSharedManagedObjectContext() -> NSManagedObjectContext? {
+        print("WIDGET DEBUG: Initializing shared managed object context")
+        
+        // Create the container with your model name
+        let container = NSPersistentContainer(name: "WorkoutTracker")
+        
+        // Get the URL for the shared App Group container
+        guard let groupContainerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.HiraGoel.WorkoutTracker") else {
+            print("WIDGET DEBUG: Failed to get App Group container URL - check App Group configuration")
+            return nil
+        }
+        
+        print("WIDGET DEBUG: App Group container URL: \(groupContainerURL.path)")
+        
+        // Define the store URL within the App Group container
+        let storeURL = groupContainerURL.appendingPathComponent("WorkoutTracker.sqlite")
+        print("WIDGET DEBUG: Store URL: \(storeURL.path)")
+        
+        // Check if the database file exists
+        let fileExists = FileManager.default.fileExists(atPath: storeURL.path)
+        print("WIDGET DEBUG: Database file exists at path: \(fileExists)")
+        
+        // Configure the persistent store description
+        let description = NSPersistentStoreDescription(url: storeURL)
+        container.persistentStoreDescriptions = [description]
+        
+        var context: NSManagedObjectContext? = nil
+        var loadError: Error?
+        
+        // Use a semaphore to wait for the asynchronous loadPersistentStores to complete
+        let semaphore = DispatchSemaphore(value: 0)
+        container.loadPersistentStores { storeDescription, error in
+            if let error = error {
+                print("WIDGET DEBUG: Error loading shared persistent store: \(error)")
+                print("WIDGET DEBUG: Store description: \(storeDescription)")
+                loadError = error
+            } else {
+                print("WIDGET DEBUG: Successfully loaded persistent store")
+                // Use a background context for better performance in extensions
+                context = container.newBackgroundContext()
+                context?.automaticallyMergesChangesFromParent = true
+            }
+            semaphore.signal() // Signal that loading is complete (or failed)
+        }
+        
+        // Wait with timeout for the store to load
+        _ = semaphore.wait(timeout: .now() + 10)
+        
+        if loadError != nil {
+            print("WIDGET DEBUG: Persistent store loading failed within timeout")
+            return nil
+        }
+        
+        print("WIDGET DEBUG: Shared persistent store loaded successfully. Context available: \(context != nil)")
+        return context
     }
 }
 
@@ -133,16 +271,15 @@ struct WidgetEntryView : View {
 
 // Define the main widget structure
 struct WorkoutCalendarWidget: Widget {
-    let kind: String = "WorkoutCalendarWidget"
+    let kind: String = "WorkoutCalendarWidget" // This must match the string used in WidgetCenter.reloadTimelines
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
-            WidgetEntryView(entry: entry) // Use your restored view
+            WidgetEntryView(entry: entry)
                 .containerBackground(.background, for: .widget)
         }
-        .configurationDisplayName("Workout Calendar") // Restore original name
-        .description("Shows your workout days for the current month.") // Restore description
-        // Restore the families you want to support
+        .configurationDisplayName("Workout Calendar")
+        .description("Shows your workout days for the current month.")
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
@@ -153,3 +290,8 @@ struct WorkoutCalendarWidget: Widget {
 } timeline: {
     SimpleEntry(date: Date(), currentMonthDate: Date(), workoutDays: [1, 5, 15, 22])
 }
+
+// Make sure your WorkoutModel class is available to the Widget target
+// You might need to add the Core Data Model file (.xcdatamodeld) and the
+// generated NSManagedObject subclass files to the Widget target's "Compile Sources"
+// and "Copy Bundle Resources" build phases.

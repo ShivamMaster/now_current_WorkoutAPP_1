@@ -1,6 +1,7 @@
 import Foundation
 import CoreData
 import SwiftUI
+import WidgetKit // Import WidgetKit
 
 class DataManager: ObservableObject {
     // Shared instance for easy access
@@ -49,6 +50,8 @@ class DataManager: ObservableObject {
         do {
             try container.viewContext.save()
             fetchWorkouts() // Refresh data
+            saveWorkoutDatesToUserDefaults() // Call the function here
+            WidgetCenter.shared.reloadTimelines(ofKind: "WorkoutCalendarWidget") // Reload widget timeline
         } catch {
             print("Error saving context: \(error.localizedDescription)")
         }
@@ -63,7 +66,7 @@ class DataManager: ObservableObject {
             duration: duration,
             notes: notes
         )
-        save()
+        save() // This will now also call saveWorkoutDatesToUserDefaults
     }
     
     // Add a new exercise to a workout with enhanced type support
@@ -96,7 +99,7 @@ class DataManager: ObservableObject {
             notes: notes,
             workout: workout
         )
-        save()
+        save() // This will now also call saveWorkoutDatesToUserDefaults
     }
     
     // Update an exercise with enhanced type support
@@ -143,19 +146,28 @@ class DataManager: ObservableObject {
         if let notes = notes {
             exercise.notes = notes
         }
-        save()
+        save() // This will now also call saveWorkoutDatesToUserDefaults
     }
+    
+    // Update a workout
+    func updateWorkout(workout: WorkoutModel, name: String, date: Date, duration: Int16, notes: String?) {
+         workout.name = name
+         workout.date = date
+         workout.duration = duration
+         workout.notes = notes
+         save() // This will now also call saveWorkoutDatesToUserDefaults
+     }
     
     // Delete a workout
     func deleteWorkout(_ workout: WorkoutModel) {
         container.viewContext.delete(workout)
-        save()
+        save() // This will now also call saveWorkoutDatesToUserDefaults
     }
     
     // Delete an exercise
     func deleteExercise(_ exercise: ExerciseModel) {
         container.viewContext.delete(exercise)
-        save()
+        save() // This will now also call saveWorkoutDatesToUserDefaults
     }
     
     // Get workout data for a specific exercise for charts
@@ -243,5 +255,24 @@ class DataManager: ObservableObject {
             workout.notes = notes
         }
         save()
+    }
+    
+    // Function to save all workout dates to UserDefaults for the widget
+    private func saveWorkoutDatesToUserDefaults() {
+        // Ensure workouts are fetched if not already loaded
+        if workouts.isEmpty {
+            fetchWorkouts()
+        }
+    
+        let allWorkoutDates = workouts.map { $0.date }
+        let formatter = ISO8601DateFormatter()
+        let isoStrings = allWorkoutDates.map { formatter.string(from: $0) }
+    
+        if let userDefaults = UserDefaults(suiteName: "group.com.HiraGoel.WorkoutTracker") {
+            userDefaults.set(isoStrings, forKey: "allWorkoutDatesForWidget")
+            print("DataManager saved \(isoStrings.count) workout dates to UserDefaults.")
+        } else {
+            print("DataManager could not access UserDefaults suite.")
+        }
     }
 }

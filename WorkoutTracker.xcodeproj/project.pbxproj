@@ -19,6 +19,10 @@
 		1A2B3C4D5E6F7G8H9I0J1A2T /* Views/ProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2U /* Views/ProgressView.swift */; };
 		1A2B3C4D5E6F7G8H9I0J1A2V /* Views/SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2W /* Views/SettingsView.swift */; };
 		1A2B3C4D5E6F7G8H9I0J1A2X /* Models/WorkoutTracker.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2Y /* Models/WorkoutTracker.xcdatamodeld */; };
+		D42398532DC8FD4700187885 /* Models/ExerciseModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2G /* Models/ExerciseModel.swift */; };
+		D42398542DC8FD5B00187885 /* Models/WorkoutTracker.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2Y /* Models/WorkoutTracker.xcdatamodeld */; };
+		D42398552DC8FD6A00187885 /* Models/DataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2I /* Models/DataManager.swift */; };
+		D42398562DC8FD8C00187885 /* Models/WorkoutModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2E /* Models/WorkoutModel.swift */; };
 		D465C28E2DB8608D003498CD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D465C28C2DB8608D003498CD /* Assets.xcassets */; };
 		D4DF66F82DC2AB1500CAEE1C /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4DF66C62DC2A85000CAEE1C /* WidgetKit.framework */; };
 		D4DF66F92DC2AB1500CAEE1C /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4DF66C82DC2A85000CAEE1C /* SwiftUI.framework */; };
@@ -73,6 +77,8 @@
 		1A2B3C4D5E6F7G8H9I0J1A2U /* Views/ProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/ProgressView.swift; sourceTree = "<group>"; };
 		1A2B3C4D5E6F7G8H9I0J1A2W /* Views/SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/SettingsView.swift; sourceTree = "<group>"; };
 		1A2B3C4D5E6F7G8H9I0J1A2Z /* WorkoutTracker.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = file.xcdatamodel; path = WorkoutTracker.xcdatamodel; sourceTree = "<group>"; };
+		D40FD9082DC84B2B00FB9158 /* WidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WidgetExtension.entitlements; sourceTree = "<group>"; };
+		D40FD9092DC84B3A00FB9158 /* WorkoutTracker.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WorkoutTracker.entitlements; sourceTree = "<group>"; };
 		D465C28C2DB8608D003498CD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D465C28D2DB8608D003498CD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D4DF66C62DC2A85000CAEE1C /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
@@ -81,7 +87,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		D4DF670B2DC2AB1700CAEE1C /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		D477F34C2DC9249A00359DB1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -91,7 +97,7 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		D4DF66FA2DC2AB1500CAEE1C /* Widget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (D4DF670B2DC2AB1700CAEE1C /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Widget; sourceTree = "<group>"; };
+		D4DF66FA2DC2AB1500CAEE1C /* Widget */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (D477F34C2DC9249A00359DB1 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = Widget; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -126,6 +132,7 @@
 		1A2B3C4D5E6F7G8H9I0J1A3C /* WorkoutTracker */ = {
 			isa = PBXGroup;
 			children = (
+				D40FD9092DC84B3A00FB9158 /* WorkoutTracker.entitlements */,
 				1A2B3C4D5E6F7G8H9I0J1A2C /* WorkoutTrackerApp.swift */,
 				1A2B3C4D5E6F7G8H9I0J1A3D /* Models */,
 				1A2B3C4D5E6F7G8H9I0J1A3E /* Views */,
@@ -161,6 +168,7 @@
 		1A2B3C4D5E6F7G8H9I0J1A3H = {
 			isa = PBXGroup;
 			children = (
+				D40FD9082DC84B2B00FB9158 /* WidgetExtension.entitlements */,
 				D465C28C2DB8608D003498CD /* Assets.xcassets */,
 				D465C28D2DB8608D003498CD /* Info.plist */,
 				1A2B3C4D5E6F7G8H9I0J1A3C /* WorkoutTracker */,
@@ -243,7 +251,7 @@
 				};
 			};
 			buildConfigurationList = 1A2B3C4D5E6F7G8H9I0J1A3N /* Build configuration list for PBXProject "WorkoutTracker" */;
-			compatibilityVersion = "Xcode 14.0";
+			compatibilityVersion = "Xcode 13.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -303,6 +311,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D42398542DC8FD5B00187885 /* Models/WorkoutTracker.xcdatamodeld in Sources */,
+				D42398562DC8FD8C00187885 /* Models/WorkoutModel.swift in Sources */,
+				D42398552DC8FD6A00187885 /* Models/DataManager.swift in Sources */,
+				D42398532DC8FD4700187885 /* Models/ExerciseModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -441,6 +453,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = WorkoutTracker/WorkoutTracker.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
@@ -471,6 +484,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = WorkoutTracker/WorkoutTracker.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
@@ -501,6 +515,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = WidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 7VJZ58KYD5;
@@ -529,6 +544,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = WidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 7VJZ58KYD5;
