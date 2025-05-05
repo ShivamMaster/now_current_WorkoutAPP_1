@@ -3,13 +3,31 @@ import SwiftUI
 struct WorkoutListView: View {
     @EnvironmentObject private var dataManager: DataManager
     @State private var showingAddWorkout = false
-    
+
     var body: some View {
         NavigationView {
             List {
                 ForEach(dataManager.workouts) { workout in
                     NavigationLink(destination: WorkoutDetailView(workout: workout)) {
                         WorkoutRowView(workout: workout)
+                    }
+                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                        Button {
+                            dataManager.duplicateWorkout(workout)
+                        } label: {
+                            Label("Duplicate", systemImage: "doc.on.doc")
+                        }
+                        .tint(.blue)
+                    }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        Button(role: .destructive) {
+                            if let index = dataManager.workouts.firstIndex(of: workout) {
+                                deleteWorkouts(at: IndexSet(integer: index))
+                            }
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                        .tint(.red)
                     }
                 }
                 .onDelete(perform: deleteWorkouts)
@@ -30,7 +48,7 @@ struct WorkoutListView: View {
             }
         }
     }
-    
+
     private func deleteWorkouts(at offsets: IndexSet) {
         for index in offsets {
             let workout = dataManager.workouts[index]
@@ -80,4 +98,4 @@ struct WorkoutListView_Previews: PreviewProvider {
         WorkoutListView()
             .environmentObject(DataManager.shared)
     }
-} 
+}

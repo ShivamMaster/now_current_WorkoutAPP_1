@@ -275,4 +275,56 @@ class DataManager: ObservableObject {
             print("DataManager could not access UserDefaults suite.")
         }
     }
+    
+    // Duplicate a workout (deep copy including exercises)
+    func duplicateWorkout(_ workout: WorkoutModel) {
+        let context = container.viewContext
+        let newWorkout = WorkoutModel.createWorkout(
+            context: context,
+            name: workout.name ?? "",
+            date: Date(), // Use current date for the duplicate
+            duration: workout.duration,
+            notes: workout.notes
+        )
+        // Duplicate exercises
+        for exercise in workout.exerciseArray {
+            let _ = ExerciseModel.createExercise(
+                context: context,
+                name: exercise.name ?? "",
+                exerciseType: ExerciseType(rawValue: exercise.exerciseType ?? "") ?? .strengthTraining, // <-- changed from .other
+                sets: exercise.sets,
+                reps: exercise.reps,
+                weight: exercise.weight,
+                duration: exercise.duration,
+                distance: exercise.distance,
+                calories: exercise.calories,
+                holdTime: exercise.holdTime,
+                order: exercise.order,
+                notes: exercise.notes,
+                workout: newWorkout
+            )
+        }
+        save()
+    }
+
+    // Duplicate an exercise within the same workout
+    func duplicateExercise(_ exercise: ExerciseModel, in workout: WorkoutModel) {
+        let context = container.viewContext
+        let _ = ExerciseModel.createExercise(
+            context: context,
+            name: exercise.name ?? "",
+            exerciseType: ExerciseType(rawValue: exercise.exerciseType ?? "") ?? .strengthTraining, // <-- changed from .other
+            sets: exercise.sets,
+            reps: exercise.reps,
+            weight: exercise.weight,
+            duration: exercise.duration,
+            distance: exercise.distance,
+            calories: exercise.calories,
+            holdTime: exercise.holdTime,
+            order: Int16(workout.exerciseArray.count),
+            notes: exercise.notes,
+            workout: workout
+        )
+        save()
+    }
 }

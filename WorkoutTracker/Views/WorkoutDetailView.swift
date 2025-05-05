@@ -48,9 +48,29 @@ struct WorkoutDetailView: View {
             
             Section(header: Text("Exercises")) {
                 ForEach(workout.exerciseArray) { exercise in
-                    NavigationLink(destination: ExerciseDetailView(exercise: exercise)) {
-                        ExerciseRowView(exercise: exercise)
-                    }
+                    ExerciseRowView(exercise: exercise)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            selectedExercise = exercise
+                        }
+                        .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                            Button {
+                                dataManager.duplicateExercise(exercise, in: workout)
+                            } label: {
+                                Label("Duplicate", systemImage: "doc.on.doc")
+                            }
+                            .tint(.blue)
+                        }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                if let index = workout.exerciseArray.firstIndex(of: exercise) {
+                                    deleteExercises(at: IndexSet(integer: index))
+                                }
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                            .tint(.red)
+                        }
                 }
                 .onDelete(perform: deleteExercises)
                 
@@ -148,4 +168,4 @@ struct CategoryWorkoutView: View {
         }
         .navigationTitle("\(workout.name) Categories")
     }
-} 
+}
