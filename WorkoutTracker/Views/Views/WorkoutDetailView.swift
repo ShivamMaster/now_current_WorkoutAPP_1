@@ -104,6 +104,23 @@ struct WorkoutDetailView: View {
                     NavigationLink(destination: ExerciseDetailView(exercise: exercise)) {
                         EnhancedExerciseRowView(exercise: exercise)
                     }
+                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                        Button {
+                            dataManager.duplicateExercise(exercise, in: workout)
+                        } label: {
+                            Label("Duplicate", systemImage: "doc.on.doc")
+                        }
+                        .tint(.blue)
+                    }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            if let index = workout.exerciseArray.firstIndex(of: exercise) {
+                                deleteExercises(at: IndexSet(integer: index))
+                            }
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
                 }
                 .onDelete(perform: deleteExercises)
                 
@@ -301,3 +318,9 @@ struct CategoryWorkoutView: View {
         .navigationTitle("\(workout.name) Categories")
     }
 }
+
+
+//// Add this function inside WorkoutDetailView
+//private func duplicateExercise(_ exercise: ExerciseModel) {
+//    dataManager.duplicateExercise(exercise, for: workout)
+//}

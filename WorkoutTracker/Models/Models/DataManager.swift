@@ -15,7 +15,16 @@ class DataManager: ObservableObject {
     init() {
         // Use the simple initialization to avoid URL issues
         container = NSPersistentContainer(name: "WorkoutTracker")
-        
+        // --- Modification Start ---
+        // Get the URL for the shared App Group container
+        guard let groupContainerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.HiraGoel.WorkoutTracker") else {
+            fatalError("Failed to get App Group container URL.") // Use fatalError in the main app for critical setup
+        }
+        // Define the store URL within the App Group container
+        let storeURL = groupContainerURL.appendingPathComponent("WorkoutTracker.sqlite") // Match your store file name
+        let description = NSPersistentStoreDescription(url: storeURL)
+        container.persistentStoreDescriptions = [description]
+        // --- Modification End ---
         container.loadPersistentStores { description, error in
             if let error = error {
                 print("Error loading Core Data: \(error.localizedDescription)")
@@ -23,10 +32,14 @@ class DataManager: ObservableObject {
                 if let detailedError = error as NSError? {
                     print("Detailed error: \(detailedError.userInfo)")
                 }
+                // Consider more robust error handling for production
+                fatalError("Unresolved error \(error), \(error.localizedDescription)")
             } else {
-                print("Core Data model loaded successfully")
+                print("Core Data model loaded successfully from App Group: \(storeURL.path)")
             }
         }
+        // Ensure viewContext automatically merges changes from background contexts (like the one potentially used by the widget)
+        container.viewContext.automaticallyMergesChangesFromParent = true
         fetchWorkouts()
     }
     
