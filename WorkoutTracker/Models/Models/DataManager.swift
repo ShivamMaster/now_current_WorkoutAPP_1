@@ -341,3 +341,27 @@ class DataManager: ObservableObject {
         save()
     }
 }
+
+extension DataManager {
+    /// Returns all exercise names for a given type:
+    /// - All default exercises
+    /// - All unique exercise names in all workouts for that type
+    func getAvailableExercises(for type: ExerciseType) -> [String] {
+        // 1. Get default exercises for this type
+        let defaultExercises = ExerciseLibrary.exercises[type] ?? []
+
+        // 2. Get all unique exercise names for this type from all workouts
+        var customExercises = Set<String>()
+        for workout in workouts {
+            for exercise in workout.exerciseArray {
+                if exercise.exerciseTypeEnum == type {
+                    customExercises.insert(exercise.name)
+                }
+            }
+        }
+
+        // 3. Combine and sort, removing duplicates
+        let allExercises = Set(defaultExercises).union(customExercises)
+        return Array(allExercises).sorted()
+    }
+}

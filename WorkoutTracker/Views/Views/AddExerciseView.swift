@@ -5,9 +5,25 @@ import SwiftUI
 struct UserExerciseLibrary {
     static let keyPrefix = "userExercises_"
 
-    static func getExercises(for type: ExerciseType) -> [String] {
+    static func getExercises(for type: ExerciseType, dataManager: DataManager = DataManager.shared) -> [String] {
+        // Get default exercises for this type
+        let defaultExercises = ExerciseLibrary.exercises[type] ?? []
+
+        // Get all exercises from workouts for this type
+        let workoutExercises = dataManager.workouts.flatMap { $0.exerciseArray }
+            .filter { $0.exerciseTypeEnum == type }
+            .map { $0.name }
+
+        // Get custom exercises from UserDefaults
         let key = keyPrefix + type.rawValue
-        return UserDefaults.standard.stringArray(forKey: key) ?? []
+        let userExercises = UserDefaults.standard.stringArray(forKey: key) ?? []
+
+        // Only keep custom exercises that are still present in workouts
+        let validCustomExercises = userExercises.filter { workoutExercises.contains($0) }
+
+        // Combine default and valid custom exercises, removing duplicates
+        let allExercises = Array(Set(defaultExercises + validCustomExercises)).sorted()
+        return allExercises
     }
 
     // Updated addExercise:
