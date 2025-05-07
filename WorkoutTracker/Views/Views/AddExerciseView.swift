@@ -10,12 +10,31 @@ struct UserExerciseLibrary {
         return UserDefaults.standard.stringArray(forKey: key) ?? []
     }
 
-    static func addExercise(_ exercise: String, for type: ExerciseType) {
+    // Updated addExercise:
+    // Adds an exercise to the user's custom library for a given type,
+    // only if it's not part of the default library and not already in the user's list.
+    static func addExercise(_ exerciseName: String, for type: ExerciseType) {
+        let defaultExercises = ExerciseLibrary.exercises[type] ?? []
+        if defaultExercises.contains(exerciseName) {
+            return // Do not add if it's a default exercise
+        }
+
         let key = keyPrefix + type.rawValue
-        var current = getExercises(for: type)
-        if !current.contains(exercise) {
-            current.append(exercise)
-            UserDefaults.standard.set(current, forKey: key)
+        var userExercisesForType = getExercises(for: type)
+        if !userExercisesForType.contains(exerciseName) {
+            userExercisesForType.append(exerciseName)
+            UserDefaults.standard.set(userExercisesForType, forKey: key)
+        }
+    }
+
+    // New removeExercise function:
+    // Removes an exercise from the user's custom library for a given type.
+    static func removeExercise(_ exerciseName: String, for type: ExerciseType) {
+        let key = keyPrefix + type.rawValue
+        var userExercisesForType = getExercises(for: type)
+        if let index = userExercisesForType.firstIndex(of: exerciseName) {
+            userExercisesForType.remove(at: index)
+            UserDefaults.standard.set(userExercisesForType, forKey: key)
         }
     }
 }
@@ -208,13 +227,11 @@ struct AddExerciseView: View {
         // Use the selected exercise name if available, otherwise use the custom name
         let exerciseName = selectedExercise.isEmpty ? name : selectedExercise
     
-        // Add custom exercise to user library if not already present in default or user library
+        // Updated logic for adding custom exercise:
+        // If a custom name was typed, try to add it to the user library.
+        // The UserExerciseLibrary.addExercise function now handles all necessary checks.
         if selectedExercise.isEmpty && !exerciseName.isEmpty {
-            let defaultLibrary = ExerciseLibrary.exercises[selectedExerciseType] ?? []
-            let userLibrary = UserExerciseLibrary.getExercises(for: selectedExerciseType)
-            if !defaultLibrary.contains(exerciseName) && !userLibrary.contains(exerciseName) {
-                UserExerciseLibrary.addExercise(exerciseName, for: selectedExerciseType)
-            }
+            UserExerciseLibrary.addExercise(exerciseName, for: selectedExerciseType)
         }
     
         // Convert string values to appropriate types with safe defaults
