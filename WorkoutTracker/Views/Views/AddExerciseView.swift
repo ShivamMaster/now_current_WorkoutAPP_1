@@ -1,5 +1,25 @@
 import SwiftUI
 
+// Helper for user exercise library
+// Moved this struct OUTSIDE of AddExerciseView
+struct UserExerciseLibrary {
+    static let keyPrefix = "userExercises_"
+
+    static func getExercises(for type: ExerciseType) -> [String] {
+        let key = keyPrefix + type.rawValue
+        return UserDefaults.standard.stringArray(forKey: key) ?? []
+    }
+
+    static func addExercise(_ exercise: String, for type: ExerciseType) {
+        let key = keyPrefix + type.rawValue
+        var current = getExercises(for: type)
+        if !current.contains(exercise) {
+            current.append(exercise)
+            UserDefaults.standard.set(current, forKey: key)
+        }
+    }
+}
+
 struct AddExerciseView: View {
     @EnvironmentObject private var dataManager: DataManager
     @Environment(\.presentationMode) var presentationMode
@@ -180,10 +200,23 @@ struct AddExerciseView: View {
         }
     }
     
+    // Helper for user exercise library
+    // Move this struct OUTSIDE of AddExerciseView
+    // UserExerciseLibrary struct has been moved to the top of the file.
+
     private func saveExercise() {
         // Use the selected exercise name if available, otherwise use the custom name
         let exerciseName = selectedExercise.isEmpty ? name : selectedExercise
-
+    
+        // Add custom exercise to user library if not already present in default or user library
+        if selectedExercise.isEmpty && !exerciseName.isEmpty {
+            let defaultLibrary = ExerciseLibrary.exercises[selectedExerciseType] ?? []
+            let userLibrary = UserExerciseLibrary.getExercises(for: selectedExerciseType)
+            if !defaultLibrary.contains(exerciseName) && !userLibrary.contains(exerciseName) {
+                UserExerciseLibrary.addExercise(exerciseName, for: selectedExerciseType)
+            }
+        }
+    
         // Convert string values to appropriate types with safe defaults
         let setsValue = Int16(sets) ?? 0
         let repsValue = Int16(reps) ?? 0
@@ -192,12 +225,12 @@ struct AddExerciseView: View {
         let distanceValue = Double(distance) ?? 0.0
         let caloriesValue = Int16(calories) ?? 0
         let holdTimeValue = Int16(holdTime) ?? 0
-
+    
         // Convert weight to KG if the user entered it in LBS
         if weightUnit == "lbs" {
             weightValue = weightValue * 0.453592 // Convert lbs to kg
         }
-
+    
         let _ = ExerciseModel.createExercise(
             context: dataManager.container.viewContext,
             name: exerciseName,
@@ -215,7 +248,7 @@ struct AddExerciseView: View {
             // Add weightUnit parameter if your ExerciseModel supports it
             // weightUnit: self.weightUnit // Example if ExerciseModel stores the unit
         )
-
+    
         dataManager.save()
         presentationMode.wrappedValue.dismiss()
     }
@@ -230,7 +263,12 @@ struct ExerciseListView: View {
     var body: some View {
         NavigationView {
             List {
-                ForEach(ExerciseLibrary.exercises[exerciseType] ?? [], id: \.self) { exercise in
+                // Merge default and user exercises, removing duplicates
+                let defaultExercises = ExerciseLibrary.exercises[exerciseType] ?? []
+                let userExercises = UserExerciseLibrary.getExercises(for: exerciseType)
+                let allExercises = Array(Set(defaultExercises + userExercises)).sorted()
+                
+                ForEach(allExercises, id: \.self) { exercise in
                     Button {
                         selectedExercise = exercise
                         isPresented = false
