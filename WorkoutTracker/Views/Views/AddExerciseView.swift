@@ -261,8 +261,10 @@ struct AddExerciseView: View {
     
         // Convert weight to KG if the user entered it in LBS
         if weightUnit == "lbs" {
-            weightValue = weightValue * 0.453592 // Convert lbs to kg
+            // Convert lbs to kg - the user entered the weight in lbs, so we need to convert to kg for storage
+            weightValue = weightValue / 2.20462 // Convert lbs to kg (more precise than multiplying by 0.453592)
         }
+        // If weightUnit is already "kg", no conversion needed as the user entered in kg
     
         let _ = ExerciseModel.createExercise(
             context: dataManager.container.viewContext,
@@ -278,10 +280,11 @@ struct AddExerciseView: View {
             order: Int16(workout.exerciseArray.count),
             notes: notes.isEmpty ? nil : notes,
             workout: workout
-            // Add weightUnit parameter if your ExerciseModel supports it
-            // weightUnit: self.weightUnit // Example if ExerciseModel stores the unit
         )
     
+        // Save the user's preferred weight unit
+        UserDefaults.standard.set(weightUnit, forKey: "weightUnit")
+        
         dataManager.save()
         presentationMode.wrappedValue.dismiss()
     }

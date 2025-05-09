@@ -6,6 +6,9 @@ struct ExerciseDetailView: View {
     
     let exercise: ExerciseModel
     
+    @AppStorage("weightUnit") private var defaultWeightUnit: String = "kg"
+    @State private var weightUnit: String
+    
     @State private var name: String
     @State private var sets: String
     @State private var reps: String
@@ -15,12 +18,19 @@ struct ExerciseDetailView: View {
     
     init(exercise: ExerciseModel) {
         self.exercise = exercise
-        
-        // Initialize state variables with exercise values
+        let userUnit = UserDefaults.standard.string(forKey: "weightUnit") ?? "kg"
+        _weightUnit = State(initialValue: userUnit)
         _name = State(initialValue: exercise.name)
         _sets = State(initialValue: "\(exercise.sets)")
         _reps = State(initialValue: "\(exercise.reps)")
-        _weight = State(initialValue: String(format: "%.1f", exercise.weight))
+        // Display weight in user's preferred unit
+        let displayWeight: Double
+        if userUnit == "lbs" {
+            displayWeight = exercise.weight * 2.20462
+        } else {
+            displayWeight = exercise.weight
+        }
+        _weight = State(initialValue: String(format: "%.1f", displayWeight))
         _notes = State(initialValue: exercise.notes ?? "")
     }
     
@@ -46,8 +56,24 @@ struct ExerciseDetailView: View {
                             .multilineTextAlignment(.trailing)
                     }
                     
+                    Picker("Weight Unit", selection: $weightUnit) {
+                        Text("kg").tag("kg")
+                        Text("lbs").tag("lbs")
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
+                    .onChange(of: weightUnit) { newUnit in
+                        // Convert displayed weight when unit changes
+                        if let currentValue = Double(weight) {
+                            if newUnit == "lbs" {
+                                weight = String(format: "%.1f", currentValue * 2.20462)
+                            } else {
+                                weight = String(format: "%.1f", currentValue / 2.20462)
+                            }
+                        }
+                    }
+                    
                     HStack {
-                        Text("Weight (kg)")
+                        Text("Weight (\(weightUnit))")
                         Spacer()
                         TextField("Weight", text: $weight)
                             .keyboardType(.decimalPad)
@@ -81,7 +107,8 @@ struct ExerciseDetailView: View {
                     HStack {
                         Text("Weight")
                         Spacer()
-                        Text("\(String(format: "%.1f", exercise.weight)) kg")
+                        let displayWeight = weightUnit == "lbs" ? exercise.weight * 2.20462 : exercise.weight
+                        Text("\(String(format: "%.1f", displayWeight)) \(weightUnit)")
                             .foregroundColor(.secondary)
                     }
                     
@@ -132,12 +159,23 @@ struct ExerciseDetailView: View {
             return
         }
         
+        // Convert to kg if needed
+        let finalWeight: Double
+        if weightUnit == "lbs" {
+            finalWeight = weightValue / 2.20462
+        } else {
+            finalWeight = weightValue
+        }
+        
+        // Save the user's preferred weight unit
+        UserDefaults.standard.set(weightUnit, forKey: "weightUnit")
+        
         dataManager.updateExercise(
             exercise: exercise,
             name: name,
             sets: setsValue,
             reps: repsValue,
-            weight: weightValue,
+            weight: finalWeight,
             notes: notes.isEmpty ? nil : notes
         )
         
@@ -148,7 +186,13 @@ struct ExerciseDetailView: View {
         name = exercise.name
         sets = "\(exercise.sets)"
         reps = "\(exercise.reps)"
-        weight = String(format: "%.1f", exercise.weight)
+        let displayWeight: Double
+        if weightUnit == "lbs" {
+            displayWeight = exercise.weight * 2.20462
+        } else {
+            displayWeight = exercise.weight
+        }
+        weight = String(format: "%.1f", displayWeight)
         notes = exercise.notes ?? ""
     }
-} 
+}
