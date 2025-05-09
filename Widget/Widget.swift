@@ -383,39 +383,30 @@ struct QuoteWidgetView: View {
     var entry: QuoteProvider.Entry
 
     var body: some View {
-        ZStack {
-            // Background gradient
-            LinearGradient(
-                gradient: Gradient(colors: [Color.blue.opacity(0.7), Color.purple.opacity(0.7)]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+        VStack(alignment: .center, spacing: 8) {
+            Spacer(minLength: 4)
 
-            VStack(alignment: .center, spacing: 8) {
-                Spacer(minLength: 4)
+            // Quote text
+            Text("\"\(entry.quote)\"")
+                .font(.system(size: 16, weight: .medium, design: .rounded))
+                .multilineTextAlignment(.center)
+                .foregroundColor(.white)
+                .lineLimit(4) // Limit to 4 lines
+                .minimumScaleFactor(0.6) // Allow text to shrink
+                .padding(.horizontal, 8)
 
-                // Quote text
-                Text("\"\(entry.quote)\"")
-                    .font(.system(size: 16, weight: .medium, design: .rounded))
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.white)
-                    .lineLimit(4) // Limit to 4 lines
-                    .minimumScaleFactor(0.6) // Allow text to shrink
-                    .padding(.horizontal, 8)
+            Spacer(minLength: 2)
 
-                Spacer(minLength: 2)
-
-                // Author text
-                Text("- \(entry.author)")
-                    .font(.system(size: 13, weight: .light, design: .rounded))
-                    .foregroundColor(.white.opacity(0.9))
-                    .lineLimit(1) // Limit to 1 line
-                    .minimumScaleFactor(0.7)
-                    .padding(.bottom, 6)
-            }
-            .padding(.vertical, 8)
-            .padding(.horizontal, 4)
+            // Author text
+            Text("- \(entry.author)")
+                .font(.system(size: 13, weight: .light, design: .rounded))
+                .foregroundColor(.white.opacity(0.9))
+                .lineLimit(1) // Limit to 1 line
+                .minimumScaleFactor(0.7)
+                .padding(.bottom, 6)
         }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 4)
     }
 }
 
@@ -426,7 +417,13 @@ struct MotivationalQuoteWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: QuoteProvider()) { entry in
             QuoteWidgetView(entry: entry)
-                .containerBackground(.clear, for: .widget)
+                .containerBackground(for: .widget) {
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color.blue.opacity(0.7), Color.purple.opacity(0.7)]),
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                }
         }
         .configurationDisplayName("Workout Motivation")
         .description("Daily motivational quotes for your workout.")
