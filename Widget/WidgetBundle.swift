@@ -5,5 +5,6 @@ import SwiftUI
 struct WorkoutAppWidgets: WidgetBundle {
     var body: some Widget {
         WorkoutCalendarWidget()
+        MotivationalQuoteWidget()
     }
 }

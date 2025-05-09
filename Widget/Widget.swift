@@ -295,3 +295,170 @@ struct WorkoutCalendarWidget: Widget {
 // You might need to add the Core Data Model file (.xcdatamodeld) and the
 // generated NSManagedObject subclass files to the Widget target's "Compile Sources"
 // and "Copy Bundle Resources" build phases.
+
+
+// MARK: - Motivational Quote Widget
+
+// Entry for the motivational quote widget
+struct QuoteEntry: TimelineEntry {
+    let date: Date
+    let quote: String
+    let author: String
+}
+
+// Provider for the motivational quote widget
+struct QuoteProvider: TimelineProvider {
+    private let appGroupID = "group.com.HiraGoel.WorkoutTracker"
+    private let quoteKey = "dailyQuote"
+    private let authorKey = "dailyQuoteAuthor"
+    private let dateKey = "dailyQuoteDate"
+
+    func placeholder(in context: Context) -> QuoteEntry {
+        QuoteEntry(date: Date(), quote: "Loading...", author: "")
+    }
+
+    func getSnapshot(in context: Context, completion: @escaping (QuoteEntry) -> Void) {
+        loadQuote { quote, author in
+            let entry = QuoteEntry(date: Date(), quote: quote, author: author)
+            completion(entry)
+        }
+    }
+
+    func getTimeline(in context: Context, completion: @escaping (Timeline<QuoteEntry>) -> Void) {
+        loadQuote { quote, author in
+            let currentDate = Date()
+            let calendar = Calendar.current
+            let nextUpdateDate = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: currentDate))!
+            let entry = QuoteEntry(date: currentDate, quote: quote, author: author)
+            let timeline = Timeline(entries: [entry], policy: .after(nextUpdateDate))
+            completion(timeline)
+        }
+    }
+
+    private func loadQuote(completion: @escaping (String, String) -> Void) {
+        let userDefaults = UserDefaults(suiteName: appGroupID)
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+
+        if let savedDate = userDefaults?.object(forKey: dateKey) as? Date,
+           calendar.isDate(savedDate, inSameDayAs: today),
+           let savedQuote = userDefaults?.string(forKey: quoteKey),
+           let savedAuthor = userDefaults?.string(forKey: authorKey) {
+            // Use cached quote for today
+            completion(savedQuote, savedAuthor)
+        } else {
+            // Fetch new quote from API
+            fetchQuoteFromAPI { quote, author in
+                // Save to UserDefaults for today
+                userDefaults?.set(quote, forKey: quoteKey)
+                userDefaults?.set(author, forKey: authorKey)
+                userDefaults?.set(today, forKey: dateKey)
+                completion(quote, author)
+            }
+        }
+    }
+
+    private func fetchQuoteFromAPI(completion: @escaping (String, String) -> Void) {
+        guard let url = URL(string: "https://api.realinspire.live/v1/quotes/random?maxLength=120") else {
+            completion("Stay motivated!", "Unknown")
+            return
+        }
+        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            if let data = data,
+               let json = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
+               let first = json.first,
+               let quote = first["content"] as? String,
+               let author = first["author"] as? String {
+                completion(quote, author)
+            } else {
+                completion("Stay motivated!", "Unknown")
+            }
+        }
+        task.resume()
+    }
+}
+
+// View for the motivational quote widget
+struct QuoteWidgetView: View {
+    var entry: QuoteProvider.Entry
+
+    var body: some View {
+        ZStack {
+            // Background gradient
+            LinearGradient(
+                gradient: Gradient(colors: [Color.blue.opacity(0.7), Color.purple.opacity(0.7)]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            VStack(alignment: .center, spacing: 8) {
+                Spacer(minLength: 4)
+
+                // Quote text
+                Text("\"\(entry.quote)\"")
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.white)
+                    .lineLimit(4) // Limit to 4 lines
+                    .minimumScaleFactor(0.6) // Allow text to shrink
+                    .padding(.horizontal, 8)
+
+                Spacer(minLength: 2)
+
+                // Author text
+                Text("- \(entry.author)")
+                    .font(.system(size: 13, weight: .light, design: .rounded))
+                    .foregroundColor(.white.opacity(0.9))
+                    .lineLimit(1) // Limit to 1 line
+                    .minimumScaleFactor(0.7)
+                    .padding(.bottom, 6)
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 4)
+        }
+    }
+}
+
+// Define the motivational quote widget
+struct MotivationalQuoteWidget: Widget {
+    let kind: String = "MotivationalQuoteWidget"
+    
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: QuoteProvider()) { entry in
+            QuoteWidgetView(entry: entry)
+                .containerBackground(.clear, for: .widget)
+        }
+        .configurationDisplayName("Workout Motivation")
+        .description("Daily motivational quotes for your workout.")
+        .supportedFamilies([.systemSmall, .systemMedium])
+    }
+}
+
+// Preview for the motivational quote widget
+#Preview(as: .systemSmall) {
+    MotivationalQuoteWidget()
+} timeline: {
+    QuoteEntry(date: Date(), quote: "The body achieves what the mind believes.", author: "Napoleon Hill")
+}
+
+// MARK: - Widget Bundle
+
+// REMOVE any @main struct or WidgetBundle from this file.
+struct WorkoutWidgetBundle: WidgetBundle {
+    var body: some Widget {
+        WorkoutCalendarWidget()
+        MotivationalQuoteWidget()
+    }
+}
+
+// Restore your Preview if you had one
+#Preview(as: .systemSmall) {
+    WorkoutCalendarWidget()
+} timeline: {
+    SimpleEntry(date: Date(), currentMonthDate: Date(), workoutDays: [1, 5, 15, 22])
+}
+
+// Make sure your WorkoutModel class is available to the Widget target
+// You might need to add the Core Data Model file (.xcdatamodeld) and the
+// generated NSManagedObject subclass files to the Widget target's "Compile Sources"
+// and "Copy Bundle Resources" build phases.
