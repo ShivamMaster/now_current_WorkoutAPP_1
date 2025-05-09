@@ -358,7 +358,7 @@ struct ExerciseDetailView: View {
         // Convert weight to KG if needed
         let finalWeightKg: Double
         if editingWeightUnit == "lbs" {
-            finalWeightKg = weightValue * Double(truncating: kgToLbsFactor as NSNumber)
+            finalWeightKg = weightValue / 2.20462 // Correct: convert lbs to kg
         } else {
             finalWeightKg = weightValue
         }
