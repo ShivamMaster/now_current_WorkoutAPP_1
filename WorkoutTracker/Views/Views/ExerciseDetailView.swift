@@ -342,11 +342,41 @@ struct ExerciseDetailView: View {
         updateWeightInputString(for: editingWeightUnit) // Uses static formatter internally
     }
 
-    private func saveChanges() { // Definition starts at line ~280
+    private func saveChanges() {
+        // Convert string inputs to appropriate types
+        guard let setsValue = Int16(sets),
+              let repsValue = Int16(reps),
+              let weightValue = Double(weightInputString.replacingOccurrences(of: ",", with: ".")),
+              let durationValue = Int16(duration),
+              let distanceValue = Double(distance.replacingOccurrences(of: ",", with: ".")),
+              let caloriesValue = Int16(calories),
+              let holdTimeValue = Int16(holdTime)
+        else {
+            return
+        }
+
+        // Convert weight to KG if needed
+        let finalWeightKg: Double
+        if editingWeightUnit == "lbs" {
+            finalWeightKg = weightValue * Double(truncating: kgToLbsFactor as NSNumber)
+        } else {
+            finalWeightKg = weightValue
+        }
+
         dataManager.updateExercise(
-            exercise: exercise
-            // ... parameters ...
+            exercise: exercise,
+            name: name,
+            exerciseType: selectedExerciseType,
+            sets: setsValue,
+            reps: repsValue,
+            weight: finalWeightKg,
+            duration: durationValue,
+            distance: distanceValue,
+            calories: caloriesValue,
+            holdTime: holdTimeValue,
+            notes: notes.isEmpty ? nil : notes
         )
+
         isEditing = false
     }
 }
