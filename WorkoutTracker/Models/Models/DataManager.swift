@@ -1,7 +1,7 @@
 import Foundation
 import CoreData
 import SwiftUI
-import WidgetKit // Import WidgetKit
+import WidgetKit 
 
 class DataManager: ObservableObject {
     // Shared instance for easy access
@@ -13,18 +13,15 @@ class DataManager: ObservableObject {
     @Published var workouts: [WorkoutModel] = []
     
     init() {
-        // Use the simple initialization to avoid URL issues
         container = NSPersistentContainer(name: "WorkoutTracker")
-        // --- Modification Start ---
         // Get the URL for the shared App Group container
         guard let groupContainerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.HiraGoel.WorkoutTracker") else {
-            fatalError("Failed to get App Group container URL.") // Use fatalError in the main app for critical setup
+            fatalError("Failed to get App Group container URL.") 
         }
         // Define the store URL within the App Group container
         let storeURL = groupContainerURL.appendingPathComponent("WorkoutTracker.sqlite") // Match your store file name
         let description = NSPersistentStoreDescription(url: storeURL)
         container.persistentStoreDescriptions = [description]
-        // --- Modification End ---
         container.loadPersistentStores { description, error in
             if let error = error {
                 print("Error loading Core Data: \(error.localizedDescription)")
@@ -32,7 +29,6 @@ class DataManager: ObservableObject {
                 if let detailedError = error as NSError? {
                     print("Detailed error: \(detailedError.userInfo)")
                 }
-                // Consider more robust error handling for production
                 fatalError("Unresolved error \(error), \(error.localizedDescription)")
             } else {
                 print("Core Data model loaded successfully from App Group: \(storeURL.path)")
@@ -62,8 +58,8 @@ class DataManager: ObservableObject {
     func save() {
         do {
             try container.viewContext.save()
-            fetchWorkouts() // Refresh data
-            saveWorkoutDatesToUserDefaults() // Call the function here
+            fetchWorkouts() 
+            saveWorkoutDatesToUserDefaults() 
             WidgetCenter.shared.reloadTimelines(ofKind: "WorkoutCalendarWidget") // Reload widget timeline
         } catch {
             print("Error saving context: \(error.localizedDescription)")

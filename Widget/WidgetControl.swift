@@ -1,10 +1,3 @@
-//
-//  WidgetControl.swift
-//  Widget
-//
-//  Created by Shivam Goel on 4/30/25.
-//
-
 import AppIntents
 import SwiftUI
 import WidgetKit
@@ -42,7 +35,7 @@ extension WidgetControl {
         }
 
         func currentValue(configuration: TimerConfiguration) async throws -> Value {
-            let isRunning = true // Check if the timer is running
+            let isRunning = true 
             return WidgetControl.Value(isRunning: isRunning, name: configuration.timerName)
         }
     }
@@ -71,7 +64,6 @@ struct StartTimerIntent: SetValueIntent {
     }
 
     func perform() async throws -> some IntentResult {
-        // Start the timer…
         return .result()
     }
 }

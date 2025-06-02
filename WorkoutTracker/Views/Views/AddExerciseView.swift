@@ -1,7 +1,5 @@
 import SwiftUI
 
-// Helper for user exercise library
-// Moved this struct OUTSIDE of AddExerciseView
 struct UserExerciseLibrary {
     static let keyPrefix = "userExercises_"
 
@@ -32,7 +30,7 @@ struct UserExerciseLibrary {
     static func addExercise(_ exerciseName: String, for type: ExerciseType) {
         let defaultExercises = ExerciseLibrary.exercises[type] ?? []
         if defaultExercises.contains(exerciseName) {
-            return // Do not add if it's a default exercise
+            return 
         }
 
         let key = keyPrefix + type.rawValue
@@ -43,7 +41,7 @@ struct UserExerciseLibrary {
         }
     }
 
-    // New removeExercise function:
+
     // Removes an exercise from the user's custom library for a given type.
     static func removeExercise(_ exerciseName: String, for type: ExerciseType) {
         let key = keyPrefix + type.rawValue
@@ -127,9 +125,8 @@ struct AddExerciseView: View {
                     }
                 }
                 
-                // Dynamic section based on selected exercise type
+
                 Section(header: Text("Exercise Details")) {
-                    // Add unit picker before weight field
                     Picker("Unit", selection: $weightUnit) {
                         Text("kg").tag("kg")
                         Text("lbs").tag("lbs")
@@ -235,15 +232,12 @@ struct AddExerciseView: View {
         }
     }
     
-    // Helper for user exercise library
-    // Move this struct OUTSIDE of AddExerciseView
-    // UserExerciseLibrary struct has been moved to the top of the file.
 
     private func saveExercise() {
         // Use the selected exercise name if available, otherwise use the custom name
         let exerciseName = selectedExercise.isEmpty ? name : selectedExercise
     
-        // Updated logic for adding custom exercise:
+
         // If a custom name was typed, try to add it to the user library.
         // The UserExerciseLibrary.addExercise function now handles all necessary checks.
         if selectedExercise.isEmpty && !exerciseName.isEmpty {
@@ -262,7 +256,7 @@ struct AddExerciseView: View {
         // Convert weight to KG if the user entered it in LBS
         if weightUnit == "lbs" {
             // Convert lbs to kg - the user entered the weight in lbs, so we need to convert to kg for storage
-            weightValue = weightValue / 2.20462 // Convert lbs to kg (more precise than multiplying by 0.453592)
+            weightValue = weightValue / 2.20462 
         }
         // If weightUnit is already "kg", no conversion needed as the user entered in kg
     
@@ -272,7 +266,7 @@ struct AddExerciseView: View {
             exerciseType: selectedExerciseType,
             sets: setsValue,
             reps: repsValue,
-            weight: weightValue, // Save the (potentially converted) kg value
+            weight: weightValue,
             duration: durationValue,
             distance: distanceValue,
             calories: caloriesValue,

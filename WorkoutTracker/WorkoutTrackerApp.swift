@@ -54,7 +54,6 @@ class ThemeManager: ObservableObject {
         didSet {
             // Save dark mode toggle and theme mode
             UserDefaults.standard.set(isDarkMode, forKey: "isDarkMode")
-            // Update themeMode accordingly
             let newMode: AppThemeMode = isDarkMode ? .dark : .light
             if themeMode != newMode {
                 themeMode = newMode
@@ -71,7 +70,6 @@ class ThemeManager: ObservableObject {
     @Published var themeMode: AppThemeMode {
         didSet {
             UserDefaults.standard.set(themeMode.rawValue, forKey: "AppThemeMode")
-            // Update isDarkMode accordingly
             let shouldBeDark = themeMode == .dark
             if isDarkMode != shouldBeDark {
                 isDarkMode = shouldBeDark
@@ -118,8 +116,6 @@ struct SplashScreen: View {
                 Text("ProgressBuddy")
                     .font(.largeTitle)
                     .bold()
-                
-                // ProgressView has been removed from here
             }
             .onAppear {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {

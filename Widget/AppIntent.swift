@@ -1,10 +1,3 @@
-//
-//  AppIntent.swift
-//  Widget
-//
-//  Created by Shivam Goel on 4/30/25.
-//
-
 import WidgetKit
 import AppIntents
 

@@ -2,28 +2,25 @@ import WidgetKit
 import SwiftUI
 import CoreData // Import CoreData
 
-// Restore your original SimpleEntry definition
+
 struct SimpleEntry: TimelineEntry {
     let date: Date
     let currentMonthDate: Date
-    let workoutDays: Set<Int> // Make sure this is back
+    let workoutDays: Set<Int> 
 }
 
-// Restore your original Provider definition
+
 struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> SimpleEntry {
-        // Restore your placeholder logic
         SimpleEntry(date: Date(), currentMonthDate: Date(), workoutDays: [1, 5, 15])
     }
 
     func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        // Restore your snapshot logic (including fetchWorkoutDays)
         let entry = SimpleEntry(date: Date(), currentMonthDate: Date(), workoutDays: fetchWorkoutDays(for: Date()))
         completion(entry)
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<SimpleEntry>) -> ()) {
-        // Restore your timeline logic (including fetchWorkoutDays)
         let currentDate = Date()
         // Use Calendar.current consistently
         let calendar = Calendar.current
@@ -97,12 +94,6 @@ struct Provider: TimelineProvider {
                 print("WIDGET DEBUG: Workout \(index): date = \(workout.date), name = \(workout.name)")
             }
             
-            // let days = workoutsInMonth.compactMap { workout -> Int? in
-            //     guard let date = workout.date else { return nil }
-            //     let day = calendar.component(.day, from: date)
-            //     print("WIDGET DEBUG: Extracted day \(day) from workout date \(date)")
-            //     return day
-            // }
 
             let days = workoutsInMonth.compactMap { workout -> Int? in
                 let day = calendar.component(.day, from: workout.date) // Directly use workout.date
@@ -397,11 +388,12 @@ struct QuoteWidgetView: View {
 
             Spacer(minLength: 2)
 
-            // Author text
+
+
             Text("- \(entry.author)")
                 .font(.system(size: 13, weight: .light, design: .rounded))
                 .foregroundColor(.white.opacity(0.9))
-                .lineLimit(1) // Limit to 1 line
+                .lineLimit(1) 
                 .minimumScaleFactor(0.7)
                 .padding(.bottom, 6)
         }

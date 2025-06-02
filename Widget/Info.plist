@@ -3,7 +3,6 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleIdentifier</key>
-    <!-- Ensure this matches the target setting -->
     <string>com.HiraGoel.WorkoutTracker.Widget</string>
     <key>NSExtension</key>
     <dict>
@@ -11,7 +10,6 @@
         <string>com.apple.widgetkit-extension</string>
         <key>NSExtensionAttributes</key>
         <dict>
-            <!-- Ensure this matches the 'kind' in Widget.swift -->
             <key>WidgetKind</key>
             <string>WorkoutCalendarWidget</string>
         </dict>

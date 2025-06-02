@@ -1,7 +1,7 @@
 import Foundation
 import CoreData
 import SwiftUI
-import WidgetKit // Import WidgetKit
+import WidgetKit 
 
 class DataManager: ObservableObject {
     // Shared instance for easy access
@@ -16,7 +16,6 @@ class DataManager: ObservableObject {
         // Use the simple initialization to avoid URL issues
         container = NSPersistentContainer(name: "WorkoutTracker")
 
-        // --- Modification Start ---
         // Get the URL for the shared App Group container
         guard let groupContainerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.HiraGoel.WorkoutTracker") else {
             fatalError("Failed to get App Group container URL.") // Use fatalError in the main app for critical setup
@@ -26,7 +25,7 @@ class DataManager: ObservableObject {
         let storeURL = groupContainerURL.appendingPathComponent("WorkoutTracker.sqlite") // Match your store file name
         let description = NSPersistentStoreDescription(url: storeURL)
         container.persistentStoreDescriptions = [description]
-        // --- Modification End ---
+
 
         container.loadPersistentStores { description, error in
             if let error = error {
@@ -35,7 +34,7 @@ class DataManager: ObservableObject {
                 if let detailedError = error as NSError? {
                     print("Detailed error: \(detailedError.userInfo)")
                 }
-                // Consider more robust error handling for production
+
                 fatalError("Unresolved error \(error), \(error.localizedDescription)")
             } else {
                 print("Core Data model loaded successfully from App Group: \(storeURL.path)")
@@ -46,7 +45,7 @@ class DataManager: ObservableObject {
         fetchWorkouts()
     }
 
-    // MARK: - CRUD Operations
+
 
     // Fetch all workouts
     func fetchWorkouts() {
