@@ -3,6 +3,29 @@ import CoreData
 import SwiftUI
 import WidgetKit // Import WidgetKit
 
+// Structs for JSON Serialization
+struct SerializedExercise: Codable {
+    let name: String
+    let type: String
+    let sets: Int16
+    let reps: Int16
+    let weight: Double
+    let duration: Int16
+    let distance: Double
+    let calories: Int16
+    let holdTime: Int16
+    let notes: String?
+    let order: Int16
+}
+
+struct SerializedWorkout: Codable {
+    let name: String
+    let date: Date
+    let duration: Int16
+    let notes: String?
+    let exercises: [SerializedExercise]
+}
+
 class DataManager: ObservableObject {
     // Shared instance for easy access
     static let shared = DataManager()
