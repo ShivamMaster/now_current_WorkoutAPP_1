@@ -6,7 +6,7 @@ class FirebaseManager: ObservableObject {
     static let shared = FirebaseManager()
     private let db = Firestore.firestore()
     
-    // Upload serialized JSON data to Firestore
+    // Upload serialized JSON data to Firestore (Unified Backup)
     func uploadData(json: String, userId: String, completion: @escaping (Result<Void, Error>) -> Void) {
         // Check if Firebase is configured
         guard FirebaseApp.app() != nil else {
@@ -22,7 +22,7 @@ class FirebaseManager: ObservableObject {
         // Structure the data to save
         let data: [String: Any] = [
             "timestamp": FieldValue.serverTimestamp(),
-            "workoutData": json,
+            "workoutData": json, // Now contains both workouts and settings
             "deviceModel": UIDevice.current.name
         ]
         

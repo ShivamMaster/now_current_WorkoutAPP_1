@@ -440,6 +440,94 @@ struct SerializedExercise: Codable {
     let order: Int16
 }
 
+struct UserSettings: Codable {
+    var weightUnit: String
+    var notificationsEnabled: Bool
+    var reminderTime: Date
+    var darkModeEnabled: Bool
+    var calendarBoxColorHex: String?
+}
+
+class UserSettingsManager: ObservableObject {
+    static let shared = UserSettingsManager()
+    
+    @Published var weightUnit: String = "kg" {
+        didSet { saveUserSettings() }
+    }
+    
+    @Published var notificationsEnabled: Bool = false {
+        didSet { saveUserSettings() }
+    }
+    
+    @Published var reminderTime: Date = Date() {
+        didSet { saveUserSettings() }
+    }
+    
+    @Published var darkModeEnabled: Bool = false {
+        didSet { saveUserSettings() }
+    }
+    
+    private init() {
+        if let loadedSettings = UserSettingsManager.loadUserSettings() {
+            self.weightUnit = loadedSettings.weightUnit
+            self.notificationsEnabled = loadedSettings.notificationsEnabled
+            self.reminderTime = loadedSettings.reminderTime
+            self.darkModeEnabled = loadedSettings.darkModeEnabled
+        } else {
+            self.weightUnit = "kg"
+            self.notificationsEnabled = false
+            self.reminderTime = Date()
+            self.darkModeEnabled = false
+        }
+    }
+    
+    private static func getDocumentsDirectory() -> URL {
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        return paths[0]
+    }
+    
+    private static func settingsFileURL() -> URL {
+        return getDocumentsDirectory().appendingPathComponent("Settings.json")
+    }
+    
+    static func loadUserSettings() -> UserSettings? {
+        let url = settingsFileURL()
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try? decoder.decode(UserSettings.self, from: data)
+    }
+    
+    private func saveUserSettings() {
+        let settings = UserSettings(
+            weightUnit: self.weightUnit,
+            notificationsEnabled: self.notificationsEnabled,
+            reminderTime: self.reminderTime,
+            darkModeEnabled: self.darkModeEnabled,
+            calendarBoxColorHex: ThemeManager.shared.calendarBoxColor.toHex()
+        )
+        let url = UserSettingsManager.settingsFileURL()
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        if let encoded = try? encoder.encode(settings) {
+            try? encoded.write(to: url)
+        }
+    }
+    
+    func applyUserSettings(_ settings: UserSettings) {
+        DispatchQueue.main.async {
+            UserDefaults.standard.set(settings.weightUnit, forKey: "weightUnit")
+            self.weightUnit = settings.weightUnit
+            self.notificationsEnabled = settings.notificationsEnabled
+            self.reminderTime = settings.reminderTime
+            ThemeManager.shared.isDarkMode = settings.darkModeEnabled
+            if let hex = settings.calendarBoxColorHex, let color = Color(hex: hex) {
+                ThemeManager.shared.calendarBoxColor = color
+            }
+        }
+    }
+}
+
 struct SerializedWorkout: Codable {
     let name: String
     let date: Date
@@ -448,11 +536,17 @@ struct SerializedWorkout: Codable {
     let exercises: [SerializedExercise]
 }
 
+struct BackupData: Codable {
+    let workouts: [SerializedWorkout]
+    let settings: UserSettings
+}
+
 extension DataManager {
-    // Export all data to a JSON string
+    // Export all data to a JSON string (Unified Backup)
     func exportDataJSON() -> String? {
         fetchWorkouts()
         
+        // 1. Serialize Workouts
         let serializedWorkouts = workouts.map { workout -> SerializedWorkout in
             let exercises = (workout.exerciseArray).map { exercise -> SerializedExercise in
                 return SerializedExercise(
@@ -479,82 +573,116 @@ extension DataManager {
             )
         }
         
+        // 2. Capture Current UserSettings (Source of Truth)
+        let weightUnit = UserDefaults.standard.string(forKey: "weightUnit") ?? "kg"
+        let isDarkMode = ThemeManager.shared.isDarkMode
+        let calendarColorHex = ThemeManager.shared.calendarBoxColor.toHex()
+        
+        let settings = UserSettings(
+            weightUnit: weightUnit,
+            notificationsEnabled: UserSettingsManager.shared.notificationsEnabled,
+            reminderTime: UserSettingsManager.shared.reminderTime,
+            darkModeEnabled: isDarkMode,
+            calendarBoxColorHex: calendarColorHex
+        )
+        
+        // 3. Create Backup Payload
+        let backupData = BackupData(workouts: serializedWorkouts, settings: settings)
+        
         do {
             let encoder = JSONEncoder()
             encoder.dateEncodingStrategy = .iso8601
-            let data = try encoder.encode(serializedWorkouts)
+            let data = try encoder.encode(backupData)
+            print("DEBUG: Generated Unified Backup JSON. Workouts: \(serializedWorkouts.count)")
             return String(data: data, encoding: .utf8)
         } catch {
-            print("Failed to encode workouts: \(error)")
+            print("ERROR: Failed to encode backup data: \(error)")
             return nil
         }
     }
     
-    // Import data from JSON string (Overwrites existing data)
+    // Import data from JSON string (Handles both Unified and Legacy formats)
     func importDataJSON(json: String, completion: @escaping (Bool) -> Void) {
         guard let data = json.data(using: .utf8) else {
-            print("Failed to convert string to data")
+            print("ERROR: Failed to convert string to data")
             completion(false)
             return
         }
         
-        do {
-            let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
-            let serializedWorkouts = try decoder.decode([SerializedWorkout].self, from: data)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        
+        // Try to decode as new Unified Backup format first
+        if let backupData = try? decoder.decode(BackupData.self, from: data) {
+            print("DEBUG: Detected Unified Backup Format. Restoring settings...")
+            // Restore UserSettings immediately
+            UserSettingsManager.shared.applyUserSettings(backupData.settings)
             
-            container.performBackgroundTask { context in
-                let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: "Workout")
-                let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+            // Proceed to restore workouts
+            restoreWorkouts(backupData.workouts, completion: completion)
+            return
+        }
+        
+        // Fallback: Try to decode as legacy [SerializedWorkout]
+        if let serializedWorkouts = try? decoder.decode([SerializedWorkout].self, from: data) {
+            print("DEBUG: Detected Legacy Backup Format. Restoring workouts only...")
+            restoreWorkouts(serializedWorkouts, completion: completion)
+            return
+        }
+        
+        print("ERROR: Failed to decode backup data (Unknown format)")
+        completion(false)
+    }
+    
+    // Internal helper to restore workouts from a list of SerializedWorkout
+    private func restoreWorkouts(_ serializedWorkouts: [SerializedWorkout], completion: @escaping (Bool) -> Void) {
+        container.performBackgroundTask { context in
+            let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: "Workout")
+            let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+            
+            do {
+                try context.execute(deleteRequest)
                 
-                do {
-                    try context.execute(deleteRequest)
+                for sWorkout in serializedWorkouts {
+                    let workout = WorkoutModel(context: context)
+                    workout.id = UUID()
+                    workout.name = sWorkout.name
+                    workout.date = sWorkout.date
+                    workout.duration = sWorkout.duration
+                    workout.notes = sWorkout.notes
                     
-                    for sWorkout in serializedWorkouts {
-                        let workout = WorkoutModel(context: context)
-                        workout.id = UUID()
-                        workout.name = sWorkout.name
-                        workout.date = sWorkout.date
-                        workout.duration = sWorkout.duration
-                        workout.notes = sWorkout.notes
-                        
-                        for sExercise in sWorkout.exercises {
-                            let exercise = ExerciseModel(context: context)
-                            exercise.id = UUID()
-                            exercise.name = sExercise.name
-                            exercise.exerciseType = sExercise.type
-                            exercise.sets = sExercise.sets
-                            exercise.reps = sExercise.reps
-                            exercise.weight = sExercise.weight
-                            exercise.duration = sExercise.duration
-                            exercise.distance = sExercise.distance
-                            exercise.calories = sExercise.calories
-                            exercise.holdTime = sExercise.holdTime
-                            exercise.notes = sExercise.notes
-                            exercise.order = sExercise.order
-                            exercise.workout = workout
-                        }
-                    }
-                    
-                    try context.save()
-                    
-                    DispatchQueue.main.async {
-                        self.fetchWorkouts()
-                        WidgetCenter.shared.reloadTimelines(ofKind: "WorkoutCalendarWidget")
-                        completion(true)
-                    }
-                    
-                } catch {
-                    print("Error importing data: \(error)")
-                    DispatchQueue.main.async {
-                        completion(false)
+                    for sExercise in sWorkout.exercises {
+                        let exercise = ExerciseModel(context: context)
+                        exercise.id = UUID()
+                        exercise.name = sExercise.name
+                        exercise.exerciseType = sExercise.type
+                        exercise.sets = sExercise.sets
+                        exercise.reps = sExercise.reps
+                        exercise.weight = sExercise.weight
+                        exercise.duration = sExercise.duration
+                        exercise.distance = sExercise.distance
+                        exercise.calories = sExercise.calories
+                        exercise.holdTime = sExercise.holdTime
+                        exercise.notes = sExercise.notes
+                        exercise.order = sExercise.order
+                        exercise.workout = workout
                     }
                 }
+                
+                try context.save()
+                
+                DispatchQueue.main.async {
+                    self.fetchWorkouts()
+                    WidgetCenter.shared.reloadTimelines(ofKind: "WorkoutCalendarWidget")
+                    completion(true)
+                }
+                
+            } catch {
+                print("ERROR: Error importing data: \(error)")
+                DispatchQueue.main.async {
+                    completion(false)
+                }
             }
-            
-        } catch {
-            print("Failed to decode workouts: \(error)")
-            completion(false)
         }
     }
 }

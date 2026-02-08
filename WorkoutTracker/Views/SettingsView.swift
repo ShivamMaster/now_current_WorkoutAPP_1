@@ -141,7 +141,7 @@ struct SettingsView: View {
     }
     
     // Backup Data Function
-    private func backupData() {
+    private func performBackup() { // Renamed from backupData
         guard let jsonString = DataManager.shared.exportDataJSON() else {
             alertTitle = "Error"
             alertMessage = "Failed to prepare data for backup."
@@ -149,19 +149,26 @@ struct SettingsView: View {
             return
         }
         
+        // Settings are now included in jsonString via DataManager
+        
         let id = firebaseID.trimmingCharacters(in: .whitespacesAndNewlines)
         
         FirebaseManager.shared.uploadData(json: jsonString, userId: id) { result in
             DispatchQueue.main.async {
                 switch result {
                 case .success:
-                    alertTitle = "Success"
-                    alertMessage = "Data successfully backed up to the cloud."
+                    // Show success animation
+                    showSuccessAnimation = true
+                    
+                    // Hide after 1.5 seconds
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        showSuccessAnimation = false
+                    }
                 case .failure(let error):
                     alertTitle = "Backup Failed"
                     alertMessage = error.localizedDescription
+                    showingAlert = true
                 }
-                showingAlert = true
             }
         }
     }
@@ -177,16 +184,26 @@ struct SettingsView: View {
         FirebaseManager.shared.downloadData(userId: id) { result in
             switch result {
             case .success(let jsonString):
+                // Import Data (Automatically handles workouts + settings)
                 DataManager.shared.importDataJSON(json: jsonString) { success in
                     DispatchQueue.main.async {
                         if success {
                             alertTitle = "Success"
-                            alertMessage = "Data successfully restored from cloud."
+                            alertMessage = "Backup restored successfully."
+                            
+                            // Show success animation
+                            showSuccessAnimation = true
+                            
+                            // Hide after 2.5 seconds (slightly longer to read)
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                                showSuccessAnimation = false
+                                showingAlert = true // Show the alert after animation for details
+                            }
                         } else {
                             alertTitle = "Error"
                             alertMessage = "Failed to import data."
+                            showingAlert = true
                         }
-                        showingAlert = true
                     }
                 }
             case .failure(let error):
