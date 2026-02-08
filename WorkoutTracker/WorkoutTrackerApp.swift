@@ -3,6 +3,7 @@ import FirebaseCore
 import FirebaseFirestore
 import WidgetKit
 import CoreData
+import Lottie
 
 // Theme management code
 enum AppThemeMode: String, CaseIterable, Identifiable {
@@ -287,17 +288,10 @@ struct SettingsView: View {
                             .ignoresSafeArea()
                         
                         VStack(spacing: 20) {
-                            ZStack {
-                                Circle()
-                                    .fill(Color.green)
-                                    .frame(width: 100, height: 100)
-                                
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 50, weight: .bold))
-                                    .foregroundColor(.white)
-                            }
-                            .scaleEffect(showSuccessAnimation ? 1.0 : 0.5)
-                            .animation(.spring(response: 0.5, dampingFraction: 0.6, blendDuration: 0), value: showSuccessAnimation)
+                            AppLottieView(animationName: "success-animation")
+                                .frame(width: 200, height: 200)
+                                .scaleEffect(showSuccessAnimation ? 1.0 : 0.5)
+                                .animation(Animation.spring(response: 0.5, dampingFraction: 0.6, blendDuration: 0), value: showSuccessAnimation)
                             
                             Text("Success!")
                                 .font(.title2)
@@ -841,6 +835,50 @@ struct WorkoutTrackerApp: App {
                 .environmentObject(dataManager)
                 .environmentObject(themeManager)
                 .preferredColorScheme(themeManager.themeMode.colorScheme)
+        }
+    }
+}
+
+// MARK: - Lottie View
+/// A SwiftUI wrapper for Lottie animations
+struct AppLottieView: UIViewRepresentable {
+    let animationName: String
+    let loopMode: LottieLoopMode
+    let animationSpeed: CGFloat
+    let contentMode: UIView.ContentMode
+    
+    init(
+        animationName: String,
+        loopMode: LottieLoopMode = .playOnce,
+        animationSpeed: CGFloat = 1.0,
+        contentMode: ContentMode = .fit
+    ) {
+        self.animationName = animationName
+        self.loopMode = loopMode
+        self.animationSpeed = animationSpeed
+        
+        switch contentMode {
+        case .fit:
+            self.contentMode = .scaleAspectFit
+        case .fill:
+            self.contentMode = .scaleAspectFill
+        }
+    }
+    
+    func makeUIView(context: Context) -> LottieAnimationView {
+        let animationView = LottieAnimationView()
+        animationView.animation = LottieAnimation.named(animationName)
+        animationView.loopMode = loopMode
+        animationView.animationSpeed = animationSpeed
+        animationView.contentMode = contentMode
+        animationView.play()
+        return animationView
+    }
+    
+    func updateUIView(_ uiView: LottieAnimationView, context: Context) {
+        // Play animation when view updates
+        if !uiView.isAnimationPlaying {
+            uiView.play()
         }
     }
 }

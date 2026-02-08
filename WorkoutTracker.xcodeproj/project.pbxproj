@@ -12,6 +12,7 @@
 		1A2B3C4D5E6F7G8H9I0J1A2F /* Models/ExerciseModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2G /* Models/ExerciseModel.swift */; };
 		1A2B3C4D5E6F7G8H9I0J1A2H /* Models/DataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2I /* Models/DataManager.swift */; };
 		1A2B3C4D5E6F7G8H9I0J1A2J /* Views/WorkoutListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2K /* Views/WorkoutListView.swift */; };
+		D45393272F381C6E00345144 /* success-animation.json in Resources */ = {isa = PBXBuildFile; fileRef = D45393262F381C6E00345144 /* success-animation.json */; };
 		1A2B3C4D5E6F7G8H9I0J1A2L /* Views/WorkoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2M /* Views/WorkoutDetailView.swift */; };
 		1A2B3C4D5E6F7G8H9I0J1A2N /* Views/ExerciseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2O /* Views/ExerciseDetailView.swift */; };
 		1A2B3C4D5E6F7G8H9I0J1A2P /* Views/AddWorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2Q /* Views/AddWorkoutView.swift */; };
@@ -23,6 +24,7 @@
 		D42398542DC8FD5B00187885 /* Models/WorkoutTracker.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2Y /* Models/WorkoutTracker.xcdatamodeld */; };
 		D42398552DC8FD6A00187885 /* Models/DataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2I /* Models/DataManager.swift */; };
 		D42398562DC8FD8C00187885 /* Models/WorkoutModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2E /* Models/WorkoutModel.swift */; };
+		D45393232F381C6E00345144 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = D45393222F381C6E00345144 /* Lottie */; };
 		D465C28E2DB8608D003498CD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D465C28C2DB8608D003498CD /* Assets.xcassets */; };
 		D48726B62F35A27B00122435 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = D48726B52F35A27B00122435 /* FirebaseCore */; };
 		D48726B82F35A27B00122435 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = D48726B72F35A27B00122435 /* FirebaseFirestore */; };
@@ -81,6 +83,7 @@
 		1A2B3C4D5E6F7G8H9I0J1A2Z /* WorkoutTracker.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = file.xcdatamodel; path = WorkoutTracker.xcdatamodel; sourceTree = "<group>"; };
 		D40FD9082DC84B2B00FB9158 /* WidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WidgetExtension.entitlements; sourceTree = "<group>"; };
 		D40FD9092DC84B3A00FB9158 /* WorkoutTracker.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WorkoutTracker.entitlements; sourceTree = "<group>"; };
+		D45393262F381C6E00345144 /* success-animation.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "success-animation.json"; sourceTree = "<group>"; };
 		D465C28C2DB8608D003498CD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D465C28D2DB8608D003498CD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D4DF66C62DC2A85000CAEE1C /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
@@ -109,6 +112,7 @@
 			files = (
 				D48726B62F35A27B00122435 /* FirebaseCore in Frameworks */,
 				D48726B82F35A27B00122435 /* FirebaseFirestore in Frameworks */,
+				D45393232F381C6E00345144 /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -138,6 +142,7 @@
 			children = (
 				D40FD9092DC84B3A00FB9158 /* WorkoutTracker.entitlements */,
 				1A2B3C4D5E6F7G8H9I0J1A2C /* WorkoutTrackerApp.swift */,
+				D45393262F381C6E00345144 /* success-animation.json */,
 				1A2B3C4D5E6F7G8H9I0J1A3D /* Models */,
 				1A2B3C4D5E6F7G8H9I0J1A3E /* Views */,
 			);
@@ -265,6 +270,7 @@
 			mainGroup = 1A2B3C4D5E6F7G8H9I0J1A3H;
 			packageReferences = (
 				D48726B42F359F9700122435 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				D45393212F381C6E00345144 /* XCRemoteSwiftPackageReference "lottie-ios" */,
 			);
 			productRefGroup = 1A2B3C4D5E6F7G8H9I0J1A3B /* Products */;
 			projectDirPath = "";
@@ -281,6 +287,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D45393272F381C6E00345144 /* success-animation.json in Resources */,
 				D465C28E2DB8608D003498CD /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -608,6 +615,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		D45393212F381C6E00345144 /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.6.0;
+			};
+		};
 		D48726B42F359F9700122435 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -619,6 +634,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		D45393222F381C6E00345144 /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D45393212F381C6E00345144 /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
+		};
 		D48726B52F35A27B00122435 /* FirebaseCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = D48726B42F359F9700122435 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
