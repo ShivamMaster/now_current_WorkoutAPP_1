@@ -17,6 +17,9 @@ struct WorkoutListView: View {
             .listStyle(InsetGroupedListStyle())
             .navigationTitle("Workouts")
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    SyncStatusView()
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
                         showingAddWorkout = true
@@ -80,4 +83,26 @@ struct WorkoutListView_Previews: PreviewProvider {
         WorkoutListView()
             .environmentObject(DataManager.shared)
     }
-} 
+}
+
+struct SyncStatusView: View {
+    @EnvironmentObject private var dataManager: DataManager
+    
+    var body: some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(dataManager.hasUnsyncedChanges ? Color.orange : Color.green)
+                .frame(width: 8, height: 8)
+                .shadow(color: (dataManager.hasUnsyncedChanges ? Color.orange : Color.green).opacity(0.5), radius: 2)
+            
+            Text(dataManager.hasUnsyncedChanges ? "unsynced" : "synced")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+                .fixedSize(horizontal: true, vertical: false)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 4)
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+}

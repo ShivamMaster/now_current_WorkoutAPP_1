@@ -64,6 +64,7 @@ class ThemeManager: ObservableObject {
             if themeMode != newMode {
                 themeMode = newMode
             }
+            DataManager.shared.hasUnsyncedChanges = true
         }
     }
     @Published var calendarBoxColor: Color {
@@ -71,6 +72,7 @@ class ThemeManager: ObservableObject {
             if let hex = calendarBoxColor.toHex() {
                 UserDefaults.standard.set(hex, forKey: "CalendarBoxColor")
             }
+            DataManager.shared.hasUnsyncedChanges = true
         }
     }
     @Published var themeMode: AppThemeMode {
@@ -81,6 +83,7 @@ class ThemeManager: ObservableObject {
             if isDarkMode != shouldBeDark {
                 isDarkMode = shouldBeDark
             }
+            DataManager.shared.hasUnsyncedChanges = true
         }
     }
 
@@ -240,6 +243,9 @@ struct SettingsView: View {
                             Text(unit)
                         }
                     }
+                    .onChange(of: weightUnit) { _ in
+                        DataManager.shared.hasUnsyncedChanges = true
+                    }
                     Toggle("Dark Mode", isOn: $themeManager.isDarkMode)
                         .onChange(of: themeManager.isDarkMode) { value in
                             themeManager.themeMode = value ? .dark : .light
@@ -359,6 +365,9 @@ struct SettingsView: View {
                     // Show success animation
                     showSuccessAnimation = true
                     
+                    // Mark as synced
+                    DataManager.shared.markAsSynced()
+                    
                     // Hide after 1.5 seconds
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                         showSuccessAnimation = false
@@ -387,6 +396,11 @@ struct SettingsView: View {
                         if success {
                             // Show success animation
                             showSuccessAnimation = true
+                            
+                            // Mark as synced after a short delay to ensure all property triggers have finished
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                DataManager.shared.markAsSynced()
+                            }
                             
                             // Hide after 1.5 seconds
                             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
@@ -511,6 +525,9 @@ class UserSettingsManager: ObservableObject {
         encoder.dateEncodingStrategy = .iso8601
         if let encoded = try? encoder.encode(settings) {
             try? encoded.write(to: url)
+            DispatchQueue.main.async {
+                DataManager.shared.hasUnsyncedChanges = true
+            }
         }
     }
     
@@ -1008,5 +1025,12 @@ struct AppLottieView: UIViewRepresentable {
         if !uiView.isAnimationPlaying {
             uiView.play()
         }
+    }
+}
+extension String {
+    func sha256() -> String {
+        let inputData = Data(self.utf8)
+        let hashed = SHA256.hash(data: inputData)
+        return hashed.compactMap { String(format: "%02x", /bin/zsh) }.joined()
     }
 }

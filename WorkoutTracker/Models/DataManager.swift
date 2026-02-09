@@ -34,6 +34,11 @@ class DataManager: ObservableObject {
     let container: NSPersistentContainer
 
     @Published var workouts: [WorkoutModel] = []
+    @Published var hasUnsyncedChanges: Bool = UserDefaults.standard.bool(forKey: "hasUnsyncedChanges") {
+        didSet {
+            UserDefaults.standard.set(hasUnsyncedChanges, forKey: "hasUnsyncedChanges")
+        }
+    }
 
     init() {
         // Use the simple initialization to avoid URL issues
@@ -91,6 +96,7 @@ class DataManager: ObservableObject {
         if container.viewContext.hasChanges {
             do {
                 try container.viewContext.save()
+                hasUnsyncedChanges = true
                 fetchWorkouts() // Refresh data on the main thread
                 
                 // Reload widget timeline after saving - CRITICAL for widget updates
@@ -273,5 +279,10 @@ class DataManager: ObservableObject {
         }
         
         return progressData
+    }
+
+    // Mark that data has been successfully backed up to the cloud
+    func markAsSynced() {
+        hasUnsyncedChanges = false
     }
 }
