@@ -21,6 +21,14 @@
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="dayName" optional="YES" attributeType="String"/>
         <relationship name="exercises" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Exercise" inverseName="workout" inverseEntity="Exercise"/>
+        <relationship name="split" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="WorkoutSplit" inverseName="workouts" inverseEntity="WorkoutSplit"/>
     </entity>
-</model>  
+    <entity name="WorkoutSplit" representedClassName=".WorkoutSplitModel" syncable="YES">
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String"/>
+        <relationship name="workouts" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Workout" inverseName="split" inverseEntity="Workout"/>
+    </entity>
+</model>

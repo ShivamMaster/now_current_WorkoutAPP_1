@@ -102,6 +102,8 @@ class DataManager: ObservableObject {
                 fatalError("Unresolved error \(error), \(error.localizedDescription)")
             } else {
                 print("Core Data model loaded successfully from App Group: \(storeURL.path)")
+                let entityNames = self.container.managedObjectModel.entities.map { $0.name ?? "Unknown" }
+                print("Loaded entities: \(entityNames.joined(separator: ", "))")
             }
         }
         container.viewContext.automaticallyMergesChangesFromParent = true
