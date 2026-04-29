@@ -12,6 +12,26 @@ enum ExerciseType: String, CaseIterable, Identifiable, Codable {
 
     var id: String { self.rawValue }
 
+    var icon: String {
+        switch self {
+        case .strengthTraining: return "dumbbell.fill"
+        case .cardio: return "heart.circle.fill"
+        case .flexibility: return "figure.yoga"
+        case .bodyweight: return "figure.walk"
+        case .functional: return "figure.cross.training"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .strengthTraining: return .blue
+        case .cardio: return .red
+        case .flexibility: return .purple
+        case .bodyweight: return .green
+        case .functional: return .orange
+        }
+    }
+
     var measurementFields: [String] {
         switch self {
         case .strengthTraining, .functional:

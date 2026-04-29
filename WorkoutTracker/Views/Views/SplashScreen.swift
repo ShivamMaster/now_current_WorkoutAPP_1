@@ -1,4 +1,5 @@
 import SwiftUI
+import Lottie
 
 struct SplashScreen: View {
     @State private var isActive = false
@@ -47,6 +48,7 @@ struct SplashScreen: View {
 
 struct MainTabView: View {
     @EnvironmentObject private var dataManager: DataManager
+    @EnvironmentObject private var themeManager: ThemeManager
     
     var body: some View {
         TabView {
@@ -60,11 +62,50 @@ struct MainTabView: View {
                     Label("Progress", systemImage: "chart.line.uptrend.xyaxis")
                 }
             
+            CalendarView()
+                .tabItem {
+                    Label("Calendar", systemImage: "calendar")
+                }
+            
             SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gear")
                 }
         }
-        .accentColor(Color.blue)
+        .accentColor(.blue)
     }
-} 
+}
+
+// MARK: - Lottie View Support
+struct AppLottieView: UIViewRepresentable {
+    let animationName: String
+    let loopMode: LottieLoopMode
+    let animationSpeed: CGFloat
+    let contentMode: UIView.ContentMode
+
+    init(animationName: String, 
+         loopMode: LottieLoopMode = .playOnce, 
+         animationSpeed: CGFloat = 1.0, 
+         contentMode: ContentMode = .fit) {
+        self.animationName = animationName
+        self.loopMode = loopMode
+        self.animationSpeed = animationSpeed
+        self.contentMode = contentMode == .fit ? .scaleAspectFit : .scaleAspectFill
+    }
+
+    func makeUIView(context: Context) -> LottieAnimationView {
+        let animationView = LottieAnimationView()
+        animationView.animation = LottieAnimation.named(animationName)
+        animationView.loopMode = loopMode
+        animationView.animationSpeed = animationSpeed
+        animationView.contentMode = contentMode
+        animationView.play()
+        return animationView
+    }
+
+    func updateUIView(_ uiView: LottieAnimationView, context: Context) {
+        if !uiView.isAnimationPlaying {
+            uiView.play()
+        }
+    }
+}

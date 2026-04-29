@@ -14,14 +14,17 @@
 		1A2B3C4D5E6F7G8H9I0J1A2J /* Views/WorkoutListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2K /* Views/WorkoutListView.swift */; };
 		AA01000000000001 /* Models/WorkoutSplitModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01000000000002 /* Models/WorkoutSplitModel.swift */; };
 		AA01000000000003 /* Models/DataManagerSerialization.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01000000000004 /* Models/DataManagerSerialization.swift */; };
-		AA0100000000000B /* Models/FirebaseConfigManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0100000000000C /* Models/FirebaseConfigManager.swift */; };
-		AA0100000000000D /* Models/FirebaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0100000000000E /* Models/FirebaseManager.swift */; };
-		AA01000000000011 /* Models/WorkoutSplitModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01000000000002 /* Models/WorkoutSplitModel.swift */; };
-		AA01000000000012 /* Models/DataManagerSerialization.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01000000000004 /* Models/DataManagerSerialization.swift */; };
-		AA01000000000013 /* Models/ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01000000000014 /* Models/ThemeManager.swift */; };
 		AA01000000000005 /* Views/SplitListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01000000000006 /* Views/SplitListView.swift */; };
 		AA01000000000007 /* Views/CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01000000000008 /* Views/CalendarView.swift */; };
 		AA01000000000009 /* Views/SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0100000000000A /* Views/SettingsView.swift */; };
+		AA0100000000001B /* Models/WorkoutSplitModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01000000000002 /* Models/WorkoutSplitModel.swift */; };
+		AA0100000000001C /* Models/DataManagerSerialization.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01000000000004 /* Models/DataManagerSerialization.swift */; };
+		AA0100000000001D /* Models/ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2E_TM /* Models/ThemeManager.swift */; };
+		AA0100000000001E /* Models/FirebaseConfigManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0100000000001F /* Models/FirebaseConfigManager.swift */; };
+		AA01000000000020 /* Models/FirebaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01000000000021 /* Models/FirebaseManager.swift */; };
+		AA01000000000022 /* Models/SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01000000000023 /* Models/SettingsManager.swift */; };
+		AA01000000000024 /* Views/CategoryWorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01000000000025 /* Views/CategoryWorkoutView.swift */; };
+		AA01000000000026 /* Views/SplashScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01000000000027 /* Views/SplashScreen.swift */; };
 		D45393272F381C6E00345144 /* success-animation.json in Resources */ = {isa = PBXBuildFile; fileRef = D45393262F381C6E00345144 /* success-animation.json */; };
 		1A2B3C4D5E6F7G8H9I0J1A2L /* Views/WorkoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2M /* Views/WorkoutDetailView.swift */; };
 		1A2B3C4D5E6F7G8H9I0J1A2N /* Views/ExerciseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2O /* Views/ExerciseDetailView.swift */; };
@@ -91,11 +94,14 @@
 		1A2B3C4D5E6F7G8H9I0J1A2U /* Views/ProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/ProgressView.swift; sourceTree = "<group>"; };
 		1A2B3C4D5E6F7G8H9I0J1A2W /* Views/SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/SettingsView.swift; sourceTree = "<group>"; };
 		1A2B3C4D5E6F7G8H9I0J1A2Z /* WorkoutTracker.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = file.xcdatamodel; path = WorkoutTracker.xcdatamodel; sourceTree = "<group>"; };
+		1A2B3C4D5E6F7G8H9I0J1A2E_TM /* Models/ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/ThemeManager.swift; sourceTree = "<group>"; };
+		AA0100000000001F /* Models/FirebaseConfigManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/FirebaseConfigManager.swift; sourceTree = "<group>"; };
+		AA01000000000021 /* Models/FirebaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/FirebaseManager.swift; sourceTree = "<group>"; };
+		AA01000000000023 /* Models/SettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/SettingsManager.swift; sourceTree = "<group>"; };
+		AA01000000000025 /* Views/CategoryWorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/CategoryWorkoutView.swift; sourceTree = "<group>"; };
+		AA01000000000027 /* Views/SplashScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/SplashScreen.swift; sourceTree = "<group>"; };
 		AA01000000000002 /* Models/WorkoutSplitModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/WorkoutSplitModel.swift; sourceTree = "<group>"; };
 		AA01000000000004 /* Models/DataManagerSerialization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/DataManagerSerialization.swift; sourceTree = "<group>"; };
-		AA0100000000000C /* Models/FirebaseConfigManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/FirebaseConfigManager.swift; sourceTree = "<group>"; };
-		AA0100000000000E /* Models/FirebaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/FirebaseManager.swift; sourceTree = "<group>"; };
-		AA01000000000014 /* Models/ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/ThemeManager.swift; sourceTree = "<group>"; };
 		AA01000000000006 /* Views/SplitListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/SplitListView.swift; sourceTree = "<group>"; };
 		AA01000000000008 /* Views/CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/CalendarView.swift; sourceTree = "<group>"; };
 		AA0100000000000A /* Views/SettingsView.swift (new) */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/SettingsView.swift; sourceTree = "<group>"; };
@@ -176,9 +182,10 @@
 				1A2B3C4D5E6F7G8H9I0J1A2Y /* Models/WorkoutTracker.xcdatamodeld */,
 				AA01000000000002 /* Models/WorkoutSplitModel.swift */,
 				AA01000000000004 /* Models/DataManagerSerialization.swift */,
-				AA0100000000000C /* Models/FirebaseConfigManager.swift */,
-				AA0100000000000E /* Models/FirebaseManager.swift */,
-				AA01000000000014 /* Models/ThemeManager.swift */,
+				1A2B3C4D5E6F7G8H9I0J1A2E_TM /* Models/ThemeManager.swift */,
+				AA0100000000001F /* Models/FirebaseConfigManager.swift */,
+				AA01000000000021 /* Models/FirebaseManager.swift */,
+				AA01000000000023 /* Models/SettingsManager.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -193,6 +200,8 @@
 				1A2B3C4D5E6F7G8H9I0J1A2S /* Views/AddExerciseView.swift */,
 				1A2B3C4D5E6F7G8H9I0J1A2U /* Views/ProgressView.swift */,
 				1A2B3C4D5E6F7G8H9I0J1A2W /* Views/SettingsView.swift */,
+				AA01000000000025 /* Views/CategoryWorkoutView.swift */,
+				AA01000000000027 /* Views/SplashScreen.swift */,
 				AA01000000000006 /* Views/SplitListView.swift */,
 				AA01000000000008 /* Views/CalendarView.swift */,
 			);
@@ -345,11 +354,14 @@
 				1A2B3C4D5E6F7G8H9I0J1A2B /* WorkoutTrackerApp.swift in Sources */,
 				AA01000000000001 /* Models/WorkoutSplitModel.swift in Sources */,
 				AA01000000000003 /* Models/DataManagerSerialization.swift in Sources */,
-				AA0100000000000B /* Models/FirebaseConfigManager.swift in Sources */,
-				AA0100000000000D /* Models/FirebaseManager.swift in Sources */,
-				AA01000000000013 /* Models/ThemeManager.swift in Sources */,
 				AA01000000000005 /* Views/SplitListView.swift in Sources */,
 				AA01000000000007 /* Views/CalendarView.swift in Sources */,
+				AA0100000000001D /* Models/ThemeManager.swift in Sources */,
+				AA0100000000001E /* Models/FirebaseConfigManager.swift in Sources */,
+				AA01000000000020 /* Models/FirebaseManager.swift in Sources */,
+				AA01000000000022 /* Models/SettingsManager.swift in Sources */,
+				AA01000000000024 /* Views/CategoryWorkoutView.swift in Sources */,
+				AA01000000000026 /* Views/SplashScreen.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -361,9 +373,9 @@
 				D42398562DC8FD8C00187885 /* Models/WorkoutModel.swift in Sources */,
 				D42398552DC8FD6A00187885 /* Models/DataManager.swift in Sources */,
 				D42398532DC8FD4700187885 /* Models/ExerciseModel.swift in Sources */,
-				AA01000000000011 /* Models/WorkoutSplitModel.swift in Sources */,
-				AA01000000000012 /* Models/DataManagerSerialization.swift in Sources */,
-				AA01000000000013 /* Models/ThemeManager.swift in Sources */,
+				AA0100000000001B /* Models/WorkoutSplitModel.swift in Sources */,
+				AA0100000000001C /* Models/DataManagerSerialization.swift in Sources */,
+				AA0100000000001D /* Models/ThemeManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
