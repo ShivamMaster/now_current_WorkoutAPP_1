@@ -52,9 +52,25 @@ struct MainTabView: View {
     @Environment(\.scenePhase) var scenePhase
     @State private var showUnsyncedAlert = false
     @State private var selectedTab = 0
+    @State private var lastTapTime: Date = Date()
+    @State private var tapCount: Int = 0
     
     var body: some View {
-        TabView(selection: $selectedTab) {
+        let selectionBinding = Binding<Int>(
+            get: { self.selectedTab },
+            set: { newValue in
+                if newValue == self.selectedTab {
+                    // Tapped already selected tab
+                    handleRepeatTap()
+                } else {
+                    // Switched tabs
+                    self.selectedTab = newValue
+                    self.tapCount = 0
+                }
+            }
+        )
+        
+        return TabView(selection: selectionBinding) {
             WorkoutListView()
                 .tabItem {
                     Label("Workouts", systemImage: "list.bullet")
@@ -92,6 +108,40 @@ struct MainTabView: View {
             }
         } message: {
             Text("Are you sure you want to leave? You still have unsynced data.")
+        }
+    }
+    
+    private func handleRepeatTap() {
+        guard dataManager.clickBackEnabled else { return }
+        
+        let now = Date()
+        let diff = now.timeIntervalSince(lastTapTime)
+        lastTapTime = now
+        
+        if dataManager.clickBackDepth == 1 {
+            // Instant pop to root
+            triggerPop()
+        } else {
+            // 2 clicks required
+            if diff < 0.5 { // Within 500ms
+                tapCount += 1
+                if tapCount >= 1 { // Second tap (initial state was 0)
+                    triggerPop()
+                    tapCount = 0
+                }
+            } else {
+                tapCount = 0
+            }
+        }
+    }
+    
+    private func triggerPop() {
+        switch selectedTab {
+        case 0: dataManager.popToRootWorkout += 1
+        case 1: dataManager.popToRootProgress += 1
+        case 2: dataManager.popToRootCalendar += 1
+        case 3: dataManager.popToRootSettings += 1
+        default: break
         }
     }
 }

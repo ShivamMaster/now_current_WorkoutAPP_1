@@ -21,6 +21,8 @@ struct SettingsView: View {
     @State private var showSuccessAnimation = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
+    @State private var showingKeychainPrompt = false
+    @State private var navigationId = UUID()
 
     // Keyboard focus state for Done button
     @FocusState private var isFocused: Bool
@@ -34,118 +36,51 @@ struct SettingsView: View {
     var body: some View {
         NavigationView {
             List {
-                // MARK: Cloud Backup
-                Section(header: Text("Cloud Backup Configuration")) {
-                    DisclosureGroup("Firebase Project Credentials", isExpanded: $isConfigExpanded) {
-                        VStack(alignment: .leading, spacing: 10) {
-                            // Feature 3: textContentType hints so iOS prompts to save to Keychain
-                            SecureField("API Key", text: $apiKey)
-                                .textContentType(.password)
-                                .autocapitalization(.none)
-                                .disableAutocorrection(true)
-                                .focused($isFocused)
-                            TextField("Project ID", text: $projectId)
-                                .textContentType(.username)
-                                .autocapitalization(.none)
-                                .disableAutocorrection(true)
-                                .focused($isFocused)
-                            TextField("Google App ID", text: $googleAppId)
-                                .autocapitalization(.none)
-                                .disableAutocorrection(true)
-                                .focused($isFocused)
-                            TextField("GCM Sender ID", text: $gcmSenderId)
-                                .autocapitalization(.none)
-                                .disableAutocorrection(true)
-                                .focused($isFocused)
-
-                            Button("Save & Connect") { saveAndConnect() }
-                                .disabled(apiKey.isEmpty || projectId.isEmpty || googleAppId.isEmpty || gcmSenderId.isEmpty)
-                                .padding(.top, 5)
-
-                            if FirebaseConfigManager.shared.isConfigured {
-                                Text("✓ Connected!")
-                                    .foregroundColor(.green).font(.caption)
-                            }
-                        }
-                    }
-
-                    // Feature 3: username textContentType so iOS offers AutoFill from Keychain
-                    TextField("Enter User Unique ID", text: $firebaseID)
-                        .textContentType(.username)
-                        .autocapitalization(.none)
-                        .disableAutocorrection(true)
-                        .focused($isFocused)
-
-                    Button(action: { showingBackupConfirmation = true }) {
-                        HStack {
-                            Image(systemName: "icloud.and.arrow.up")
-                            Text("Backup Data to Cloud")
-                        }
-                    }
-                    .disabled(firebaseID.isEmpty || !FirebaseConfigManager.shared.isConfigured)
-
-                    Button(action: { showingConfirmation = true }) {
-                        HStack {
-                            Image(systemName: "icloud.and.arrow.down")
-                            Text("Restore Data from Cloud")
-                        }
-                        .foregroundColor(.red)
-                    }
-                    .disabled(firebaseID.isEmpty || !FirebaseConfigManager.shared.isConfigured)
-                }
-
-                // MARK: Feature 5 — Local Storage Retention
-                Section(header: Text("Local Storage"), footer: Text("Workouts older than the selected window are deleted from this device after backup, but remain in the cloud.")) {
-                    Picker("Keep Local Data", selection: $selectedRetention) {
-                        ForEach(DataRetentionPolicy.allCases) { policy in
-                            Text(policy.rawValue).tag(policy)
-                        }
-                    }
-                    .onChange(of: selectedRetention) { newValue in
-                        if newValue != .allTime {
-                            showingRetentionConfirm = true
-                        } else {
-                            dataManager.dataRetentionPolicy = newValue
-                        }
-                    }
-                }
-
-                // MARK: Preferences
-                Section(header: Text("Preferences")) {
-                    Picker("Weight Unit", selection: $weightUnit) {
-                        ForEach(weightUnits, id: \.self) { Text($0) }
-                    }
-                    .onChange(of: weightUnit) { _ in dataManager.scheduleHashCheck() }
-
-                    Toggle("Dark Mode", isOn: $themeManager.isDarkMode)
-                        .onChange(of: themeManager.isDarkMode) { value in
-                            themeManager.themeMode = value ? .dark : .light
-                        }
-                }
-
-                Section(header: Text("Calendar Color")) {
-                    ColorPicker("Default Workout Color", selection: $themeManager.calendarBoxColor)
-                    NavigationLink(destination: SplitColorsView()) {
-                        Text("Customize Split Colors")
-                    }
-                }
-
-                Section(header: Text("About")) {
-                    HStack {
-                        Text("Version"); Spacer()
-                        Text("1.0.0").foregroundColor(.secondary)
-                    }
-                    NavigationLink(destination: PrivacyPolicyView()) {
-                        Text("Privacy Policy")
-                    }
-                }
+                cloudBackupSection
+                localStorageSection
+                preferencesSection
+                calendarColorSection
+                aboutSection
             }
             .navigationTitle("Settings")
             .listStyle(.insetGrouped)
             .onAppear { loadCredentials() }
-            // Alerts
+            .background(alertsView)
+            .overlay {
+                successOverlay
+            }
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        isFocused = false
+                    }
+                }
+            }
+        }
+        .id(navigationId)
+        .onReceive(dataManager.$popToRootSettings) { _ in
+            navigationId = UUID()
+        }
+    }
+
+    @ViewBuilder
+    private var alertsView: some View {
+        Color.clear
             .alert(isPresented: $showingAlert) {
                 Alert(title: Text(alertTitle), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+            }
+            .alert("Save to Keychain?", isPresented: $showingKeychainPrompt) {
+                Button("Save", role: .none) {
+                    FirebaseConfigManager.shared.saveCredentials(apiKey: apiKey, projectId: projectId, googleAppId: googleAppId, gcmSenderId: gcmSenderId)
+                    showSuccessAnimation = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        showSuccessAnimation = false
+                    }
+                }
+                Button("No Thanks", role: .cancel) { }
+            } message: {
+                Text("Would you like to securely save these credentials to your device Keychain? They will be preserved even if you delete the app, allowing automatic sign-in later.")
             }
             .confirmationDialog("Confirm Backup", isPresented: $showingBackupConfirmation, titleVisibility: .visible) {
                 Button("Backup") { performBackup() }
@@ -170,27 +105,172 @@ struct SettingsView: View {
             } message: {
                 Text("Local workouts older than \(selectedRetention.rawValue.lowercased()) will be deleted from this device. They remain safely in your cloud backup.")
             }
-            .overlay {
-                if showSuccessAnimation {
-                    ZStack {
-                        Color.black.opacity(0.4).ignoresSafeArea()
-                        VStack(spacing: 20) {
-                            AppLottieView(animationName: "success-animation")
-                                .frame(width: 200, height: 200)
-                                .scaleEffect(showSuccessAnimation ? 1.0 : 0.5)
-                                .animation(.spring(response: 0.5, dampingFraction: 0.6), value: showSuccessAnimation)
-                            Text("Success!")
-                                .font(.title2).fontWeight(.bold).foregroundColor(.white)
-                        }
+    }
+
+    @ViewBuilder
+    private var cloudBackupSection: some View {
+        Section(header: Text("Cloud Backup Configuration")) {
+            DisclosureGroup("Firebase Project Credentials", isExpanded: $isConfigExpanded) {
+                VStack(alignment: .leading, spacing: 10) {
+                    SecureField("API Key", text: $apiKey)
+                        .textContentType(.password)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
+                        .focused($isFocused)
+                    TextField("Project ID", text: $projectId)
+                        .textContentType(.username)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
+                        .focused($isFocused)
+                    TextField("Google App ID", text: $googleAppId)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
+                        .focused($isFocused)
+                    TextField("GCM Sender ID", text: $gcmSenderId)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
+                        .focused($isFocused)
+
+                    Button("Save & Connect") { saveAndConnect() }
+                        .disabled(apiKey.isEmpty || projectId.isEmpty || googleAppId.isEmpty || gcmSenderId.isEmpty)
+                        .padding(.top, 5)
+
+                    if FirebaseConfigManager.shared.isConfigured {
+                        Text("✓ Connected!")
+                            .foregroundColor(.green).font(.caption)
                     }
                 }
             }
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("Done") {
-                        isFocused = false
+
+            TextField("Enter User Unique ID", text: $firebaseID)
+                .textContentType(.username)
+                .autocapitalization(.none)
+                .disableAutocorrection(true)
+                .focused($isFocused)
+
+            Button(action: { showingBackupConfirmation = true }) {
+                HStack {
+                    Image(systemName: "icloud.and.arrow.up")
+                    Text("Backup Data to Cloud")
+                }
+            }
+            .disabled(firebaseID.isEmpty || !FirebaseConfigManager.shared.isConfigured)
+
+            Button(action: { showingConfirmation = true }) {
+                HStack {
+                    Image(systemName: "icloud.and.arrow.down")
+                    Text("Restore Data from Cloud")
+                }
+                .foregroundColor(.red)
+            }
+            .disabled(firebaseID.isEmpty || !FirebaseConfigManager.shared.isConfigured)
+            
+            Button(action: {
+                FirebaseConfigManager.shared.saveCredentials(apiKey: apiKey, projectId: projectId, googleAppId: googleAppId, gcmSenderId: gcmSenderId)
+                showSuccessAnimation = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { showSuccessAnimation = false }
+            }) {
+                HStack {
+                    Image(systemName: "key.fill")
+                    Text("Manually Save to Apple Passwords")
+                }
+            }
+            .disabled(apiKey.isEmpty || projectId.isEmpty)
+        }
+    }
+
+    @ViewBuilder
+    private var localStorageSection: some View {
+        Section(header: Text("Local Storage"), footer: Text("Workouts older than the selected window are deleted from this device after backup, but remain in the cloud.")) {
+            Picker("Keep Local Data", selection: $selectedRetention) {
+                ForEach(DataRetentionPolicy.allCases) { policy in
+                    Text(policy.rawValue).tag(policy)
+                }
+            }
+            .onChange(of: selectedRetention) { newValue in
+                if newValue != .allTime {
+                    showingRetentionConfirm = true
+                } else {
+                    dataManager.dataRetentionPolicy = newValue
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var preferencesSection: some View {
+        Section(header: Text("Preferences")) {
+            Picker("Weight Unit", selection: $weightUnit) {
+                ForEach(weightUnits, id: \.self) { Text($0) }
+            }
+            .onChange(of: weightUnit) { _ in dataManager.scheduleHashCheck() }
+
+            Toggle("Dark Mode", isOn: $themeManager.isDarkMode)
+                .onChange(of: themeManager.isDarkMode) { value in
+                    themeManager.themeMode = value ? .dark : .light
+                }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Toggle("Click Back", isOn: $dataManager.clickBackEnabled)
+                    Button(action: {}) {
+                        Image(systemName: "info.circle")
+                            .foregroundColor(.blue)
                     }
+                    .help("Tapping the active tab icon will navigate back to the initial page.")
+                    // For iOS, help is not visible easily, let's use a small description below
+                }
+                
+                if dataManager.clickBackEnabled {
+                    Picker("Back Depth", selection: $dataManager.clickBackDepth) {
+                        Text("1 Click").tag(1)
+                        Text("2 Clicks").tag(2)
+                    }
+                    .pickerStyle(.segmented)
+                }
+                
+                Text("Tapping the active tab icon will instantly navigate you back to the main starting page of that tab.")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.vertical, 4)
+        }
+    }
+
+    @ViewBuilder
+    private var calendarColorSection: some View {
+        Section(header: Text("Calendar Color")) {
+            NavigationLink(destination: SplitColorsView()) {
+                Text("Customize Split Colors")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var aboutSection: some View {
+        Section(header: Text("About")) {
+            HStack {
+                Text("Version"); Spacer()
+                Text("1.0.0").foregroundColor(.secondary)
+            }
+            NavigationLink(destination: PrivacyPolicyView()) {
+                Text("Privacy Policy")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var successOverlay: some View {
+        if showSuccessAnimation {
+            ZStack {
+                Color.black.opacity(0.4).ignoresSafeArea()
+                VStack(spacing: 20) {
+                    AppLottieView(animationName: "success-animation")
+                        .frame(width: 200, height: 200)
+                        .scaleEffect(showSuccessAnimation ? 1.0 : 0.5)
+                        .animation(.spring(response: 0.5, dampingFraction: 0.6), value: showSuccessAnimation)
+                    Text("Success!")
+                        .font(.title2).fontWeight(.bold).foregroundColor(.white)
                 }
             }
         }
@@ -210,23 +290,13 @@ struct SettingsView: View {
             googleAppId: googleAppId, gcmSenderId: gcmSenderId
         )
         if success {
-            alertTitle = "Success"; alertMessage = "Firebase Configured Successfully."
             isConfigExpanded = false
-            // Feature 3: trigger password save prompt by updating the URL for AutoFill association
-            triggerKeychainSavePrompt()
+            showingKeychainPrompt = true
         } else {
-            alertTitle = "Error"; alertMessage = "Failed to configure Firebase."
+            alertTitle = "Error"
+            alertMessage = "Failed to configure Firebase."
+            showingAlert = true
         }
-        showingAlert = true
-    }
-
-    /// Feature 3: Signals iOS to offer saving credentials to Keychain/Passwords.
-    /// We use a UITextField approach via a hidden web credential domain association hint.
-    private func triggerKeychainSavePrompt() {
-        // The textContentType(.password) + textContentType(.username) set above
-        // combined with a successful form submission causes iOS to offer to save
-        // the credentials automatically. No extra code is needed beyond the
-        // textContentType modifiers already applied to the fields.
     }
 
     private func performBackup() {

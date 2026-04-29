@@ -4,6 +4,7 @@ import SwiftUI
 struct SplitListView: View {
     @EnvironmentObject private var dataManager: DataManager
     @State private var showingAddSplit = false
+    @State private var navigationId = UUID()
 
     var body: some View {
         NavigationView {
@@ -64,6 +65,10 @@ struct SplitListView: View {
             .sheet(isPresented: $showingAddSplit) {
                 AddSplitView()
             }
+        }
+        .id(navigationId)
+        .onReceive(dataManager.$popToRootWorkout) { _ in
+            navigationId = UUID() // Reset entire navigation stack
         }
     }
 }

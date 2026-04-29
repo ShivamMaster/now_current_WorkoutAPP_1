@@ -1,186 +1,315 @@
 import SwiftUI
 
 // MARK: - Calendar Mode
-enum CalendarMode: String, CaseIterable {
-    case year = "Year"
-    case month = "Month"
-    case week = "Week"
+enum CalendarMode: Int, Comparable {
+    case year = 0
+    case month = 1
+    case week = 2
+    case day = 3
+    
+    static func < (lhs: CalendarMode, rhs: CalendarMode) -> Bool {
+        return lhs.rawValue < rhs.rawValue
+    }
 }
 
-// MARK: - Enhanced Calendar View (Feature 4)
 struct CalendarView: View {
     @EnvironmentObject private var dataManager: DataManager
     @EnvironmentObject private var themeManager: ThemeManager
     private let calendar = Calendar.current
-
-    // View state
-    @State private var calendarMode: CalendarMode = .year
-    @State private var selectedDate: Date = Date()
-    @State private var showingDayDetail = false
-    @State private var dayDetailDate: Date = Date()
-
-    // Pinch-to-zoom
-    @State private var magnifyScale: CGFloat = 1.0
-    @GestureState private var pinchScale: CGFloat = 1.0
-
-    // Navigation offset (for swipe left/right in month/week mode)
-    @State private var offset: CGFloat = 0
-    @GestureState private var dragOffset: CGFloat = 0
-
+    
+    @State private var mode: CalendarMode = .year
+    @State private var referenceDate: Date = Date()
+    
+    // Tab selection offsets (simulating infinite scroll)
+    @State private var yearOffset: Int = 0
+    @State private var monthOffset: Int = 0
+    @State private var weekOffset: Int = 0
+    @State private var dayOffset: Int = 0
+    
+    // For popping to root
+    @State private var navigationId = UUID()
+    
+    // A stable base date for offset calculations
+    private let baseDate = Calendar.current.startOfDay(for: Date())
+    
     private var workoutDays: Set<Date> {
         Set(dataManager.workouts.map { calendar.startOfDay(for: $0.date) })
     }
-
+    
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                // Mode selector
-                Picker("View", selection: $calendarMode) {
-                    ForEach(CalendarMode.allCases, id: \.self) { mode in
-                        Text(mode.rawValue).tag(mode)
-                    }
-                }
-                .pickerStyle(SegmentedPickerStyle())
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-
-                // Header with navigation arrows
                 navigationHeader
-
                 Divider()
-
-                // Main calendar content
-                Group {
-                    switch calendarMode {
-                    case .year:  yearView
-                    case .month: monthView
-                    case .week:  weekView
-                    }
-                }
-                .gesture(
-                    // Pinch gesture: zoom in → month → week, zoom out reverses
-                    MagnificationGesture()
-                        .updating($pinchScale) { value, state, _ in state = value }
-                        .onEnded { value in
-                            if value > 1.3 {
-                                // Zoom in
-                                switch calendarMode {
-                                case .year:  withAnimation { calendarMode = .month }
-                                case .month: withAnimation { calendarMode = .week }
-                                case .week:  break
-                                }
-                            } else if value < 0.75 {
-                                // Zoom out
-                                switch calendarMode {
-                                case .week:  withAnimation { calendarMode = .month }
-                                case .month: withAnimation { calendarMode = .year }
-                                case .year:  break
-                                }
+                
+                ZStack {
+                    if mode == .year {
+                        TabView(selection: $yearOffset) {
+                            ForEach(-50...50, id: \.self) { offset in
+                                YearPage(
+                                    date: date(byAdding: .year, value: offset, to: baseDate),
+                                    colorForDay: colorFor(day:),
+                                    onMonthTap: zoomToMonth
+                                )
+                                .tag(offset)
                             }
                         }
-                )
+                        .tabViewStyle(.page(indexDisplayMode: .never))
+                        .transition(.asymmetric(insertion: .scale(scale: 0.8).combined(with: .opacity),
+                                                removal: .scale(scale: 1.2).combined(with: .opacity)))
+                    } else if mode == .month {
+                        TabView(selection: $monthOffset) {
+                            ForEach(-600...600, id: \.self) { offset in
+                                MonthPage(
+                                    date: date(byAdding: .month, value: offset, to: baseDate),
+                                    workoutDays: workoutDays,
+                                    colorForDay: colorFor(day:),
+                                    onDayTap: zoomToWeek
+                                )
+                                .tag(offset)
+                            }
+                        }
+                        .tabViewStyle(.page(indexDisplayMode: .never))
+                        .transition(.asymmetric(insertion: .scale(scale: 0.8).combined(with: .opacity),
+                                                removal: .scale(scale: 1.2).combined(with: .opacity)))
+                    } else if mode == .week {
+                        TabView(selection: $weekOffset) {
+                            ForEach(-2600...2600, id: \.self) { offset in
+                                WeekPage(
+                                    date: date(byAdding: .weekOfYear, value: offset, to: baseDate),
+                                    workoutDays: workoutDays,
+                                    colorForDay: colorFor(day:),
+                                    colorForWorkout: colorFor(workout:),
+                                    onDayTap: zoomToDay
+                                )
+                                .tag(offset)
+                            }
+                        }
+                        .tabViewStyle(.page(indexDisplayMode: .never))
+                        .transition(.asymmetric(insertion: .scale(scale: 0.8).combined(with: .opacity),
+                                                removal: .scale(scale: 1.2).combined(with: .opacity)))
+                    } else if mode == .day {
+                        TabView(selection: $dayOffset) {
+                            ForEach(-10000...10000, id: \.self) { offset in
+                                DayPage(
+                                    date: date(byAdding: .day, value: offset, to: baseDate)
+                                )
+                                .tag(offset)
+                            }
+                        }
+                        .tabViewStyle(.page(indexDisplayMode: .never))
+                        .transition(.asymmetric(insertion: .scale(scale: 0.8).combined(with: .opacity),
+                                                removal: .scale(scale: 1.2).combined(with: .opacity)))
+                    }
+                }
             }
             .navigationTitle("Calendar")
-            .sheet(isPresented: $showingDayDetail) {
-                DayWorkoutDetailSheet(date: dayDetailDate)
-                    .environmentObject(dataManager)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Today") {
+                        goToToday()
+                    }
+                }
+            }
+            .id(navigationId)
+            .onReceive(dataManager.$popToRootCalendar) { _ in
+                // When we receive a pop signal, we reset to year mode and today
+                withAnimation(.spring()) {
+                    mode = .year
+                    goToToday()
+                    navigationId = UUID() // Force refresh
+                }
             }
         }
     }
-
-    // MARK: - Navigation Header
+    
+    // MARK: - Navigation
     @ViewBuilder
     private var navigationHeader: some View {
         HStack {
-            Button(action: navigateBackward) {
-                Image(systemName: "chevron.left")
-                    .font(.title3).padding(8)
+            if mode != .year {
+                Button(action: zoomOut) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                        Text(backButtonTitle)
+                    }
+                    .font(.headline)
+                    .foregroundColor(.accentColor)
+                }
             }
             Spacer()
             Text(headerTitle)
-                .font(.headline).fontWeight(.semibold)
+                .font(.headline)
+                .fontWeight(.bold)
             Spacer()
-            Button(action: navigateForward) {
-                Image(systemName: "chevron.right")
-                    .font(.title3).padding(8)
+            // Placeholder to keep title centered
+            if mode != .year {
+                Text(backButtonTitle).hidden().overlay(Image(systemName: "chevron.left").hidden(), alignment: .leading)
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding()
+        .background(Color(.systemBackground))
     }
-
+    
+    private var backButtonTitle: String {
+        switch mode {
+        case .month: return "Year"
+        case .week: return "Month"
+        case .day: return "Week"
+        default: return ""
+        }
+    }
+    
     private var headerTitle: String {
-        switch calendarMode {
+        switch mode {
         case .year:
-            return "\(calendar.component(.year, from: selectedDate))"
+            let d = date(byAdding: .year, value: yearOffset, to: baseDate)
+            return "\(calendar.component(.year, from: d))"
         case .month:
+            let d = date(byAdding: .month, value: monthOffset, to: baseDate)
             let fmt = DateFormatter(); fmt.dateFormat = "MMMM yyyy"
-            return fmt.string(from: selectedDate)
+            return fmt.string(from: d)
         case .week:
-            let weekStart = startOfWeek(for: selectedDate)
+            let d = date(byAdding: .weekOfYear, value: weekOffset, to: baseDate)
+            let weekStart = startOfWeek(for: d)
             let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart) ?? weekStart
             let fmt = DateFormatter(); fmt.dateFormat = "MMM d"
             return "\(fmt.string(from: weekStart)) – \(fmt.string(from: weekEnd))"
+        case .day:
+            let d = date(byAdding: .day, value: dayOffset, to: baseDate)
+            let fmt = DateFormatter(); fmt.dateStyle = .long
+            return fmt.string(from: d)
         }
     }
-
-    private func navigateBackward() {
-        withAnimation(.easeInOut(duration: 0.25)) {
-            switch calendarMode {
-            case .year:
-                selectedDate = calendar.date(byAdding: .year, value: -1, to: selectedDate) ?? selectedDate
-            case .month:
-                selectedDate = calendar.date(byAdding: .month, value: -1, to: selectedDate) ?? selectedDate
-            case .week:
-                selectedDate = calendar.date(byAdding: .weekOfYear, value: -1, to: selectedDate) ?? selectedDate
+    
+    // MARK: - Zooming & Actions
+    private func zoomToMonth(date: Date) {
+        let offset = calendar.dateComponents([.month], from: baseDate, to: date).month ?? 0
+        monthOffset = offset
+        withAnimation(.spring()) {
+            mode = .month
+        }
+    }
+    
+    private func zoomToWeek(date: Date) {
+        let offset = calendar.dateComponents([.weekOfYear], from: baseDate, to: date).weekOfYear ?? 0
+        weekOffset = offset
+        withAnimation(.spring()) {
+            mode = .week
+        }
+    }
+    
+    private func zoomToDay(date: Date) {
+        let offset = calendar.dateComponents([.day], from: baseDate, to: date).day ?? 0
+        dayOffset = offset
+        withAnimation(.spring()) {
+            mode = .day
+        }
+    }
+    
+    private func zoomOut() {
+        withAnimation(.spring()) {
+            if mode == .day {
+                // Sync week offset
+                let d = date(byAdding: .day, value: dayOffset, to: baseDate)
+                weekOffset = calendar.dateComponents([.weekOfYear], from: baseDate, to: d).weekOfYear ?? 0
+                mode = .week
+            } else if mode == .week {
+                // Sync month offset
+                let d = date(byAdding: .weekOfYear, value: weekOffset, to: baseDate)
+                monthOffset = calendar.dateComponents([.month], from: baseDate, to: d).month ?? 0
+                mode = .month
+            } else if mode == .month {
+                // Sync year offset
+                let d = date(byAdding: .month, value: monthOffset, to: baseDate)
+                yearOffset = calendar.dateComponents([.year], from: baseDate, to: d).year ?? 0
+                mode = .year
             }
         }
     }
-
-    private func navigateForward() {
-        withAnimation(.easeInOut(duration: 0.25)) {
-            switch calendarMode {
-            case .year:
-                selectedDate = calendar.date(byAdding: .year, value: 1, to: selectedDate) ?? selectedDate
-            case .month:
-                selectedDate = calendar.date(byAdding: .month, value: 1, to: selectedDate) ?? selectedDate
-            case .week:
-                selectedDate = calendar.date(byAdding: .weekOfYear, value: 1, to: selectedDate) ?? selectedDate
-            }
+    
+    private func goToToday() {
+        withAnimation(.spring()) {
+            yearOffset = 0
+            monthOffset = 0
+            weekOffset = 0
+            dayOffset = 0
         }
     }
+    
+    // MARK: - Helpers
+    private func date(byAdding comp: Calendar.Component, value: Int, to date: Date) -> Date {
+        return calendar.date(byAdding: comp, value: value, to: date) ?? date
+    }
+    
+    private func startOfWeek(for date: Date) -> Date {
+        let comps = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
+        return calendar.date(from: comps) ?? date
+    }
+    
+    private func colorFor(day: Date) -> Color {
+        guard workoutDays.contains(day) else { return Color.clear }
+        let dayWorkouts = dataManager.workouts.filter { calendar.isDate($0.date, inSameDayAs: day) }
+        let splits = Set(dayWorkouts.compactMap { $0.split?.id.uuidString })
+        if splits.count > 1 {
+            return themeManager.multipleSplitsColor
+        } else if let splitId = splits.first, let c = themeManager.splitColors[splitId] {
+            return c
+        } else {
+            return themeManager.calendarBoxColor
+        }
+    }
+    
+    private func colorFor(workout: WorkoutModel) -> Color {
+        if let splitId = workout.split?.id.uuidString, let c = themeManager.splitColors[splitId] {
+            return c
+        }
+        return themeManager.calendarBoxColor
+    }
+}
 
-    // MARK: - Year View
-    private var yearView: some View {
+// MARK: - Pages
+
+struct YearPage: View {
+    let date: Date
+    let colorForDay: (Date) -> Color
+    let onMonthTap: (Date) -> Void
+    private let calendar = Calendar.current
+    
+    var body: some View {
         ScrollView {
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 20) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 15), count: 3), spacing: 20) {
                 ForEach(1...12, id: \.self) { month in
                     MiniMonthView(
-                        year: calendar.component(.year, from: selectedDate),
+                        year: calendar.component(.year, from: date),
                         month: month,
-                        colorForDay: colorFor(day:)
-                    ) { tappedDate in
-                        selectedDate = tappedDate
-                        withAnimation { calendarMode = .month }
-                    }
+                        colorForDay: colorForDay,
+                        onMonthTap: onMonthTap
+                    )
                 }
             }
             .padding()
         }
-        .transition(.opacity)
     }
+}
 
-    // MARK: - Month View
-    private var monthView: some View {
-        let year  = calendar.component(.year, from: selectedDate)
-        let month = calendar.component(.month, from: selectedDate)
+struct MonthPage: View {
+    let date: Date
+    let workoutDays: Set<Date>
+    let colorForDay: (Date) -> Color
+    let onDayTap: (Date) -> Void
+    private let calendar = Calendar.current
+    
+    var body: some View {
+        let year  = calendar.component(.year, from: date)
+        let month = calendar.component(.month, from: date)
         let days  = daysInMonth(year: year, month: month)
         let firstWeekday = days.first.map { calendar.component(.weekday, from: $0) } ?? 1
         let columns = Array(repeating: GridItem(.flexible()), count: 7)
-
+        
         return ScrollView {
             VStack(spacing: 8) {
-                // Weekday headers
                 HStack {
                     ForEach(calendar.shortWeekdaySymbols, id: \.self) { sym in
                         Text(sym.prefix(1))
@@ -190,21 +319,16 @@ struct CalendarView: View {
                     }
                 }
                 .padding(.horizontal, 8)
-
+                
                 LazyVGrid(columns: columns, spacing: 6) {
-                    // Leading blank cells
                     ForEach(0..<(firstWeekday - 1), id: \.self) { _ in Color.clear }
-                    // Day cells
                     ForEach(days, id: \.self) { day in
                         let isWorkout = workoutDays.contains(day)
                         let isToday = calendar.isDateInToday(day)
-                        Button(action: {
-                            dayDetailDate = day
-                            showingDayDetail = true
-                        }) {
+                        Button(action: { onDayTap(day) }) {
                             ZStack {
                                 Circle()
-                                    .fill(isWorkout ? colorFor(day: day) :
+                                    .fill(isWorkout ? colorForDay(day) :
                                             isToday ? Color.accentColor.opacity(0.15) : Color(.systemGray6))
                                     .frame(width: 38, height: 38)
                                 Text("\(calendar.component(.day, from: day))")
@@ -219,39 +343,56 @@ struct CalendarView: View {
             }
             .padding(.vertical, 8)
         }
-        .transition(.slide)
     }
+    
+    private func daysInMonth(year: Int, month: Int) -> [Date] {
+        var result: [Date] = []
+        let comps = DateComponents(year: year, month: month)
+        guard let start = calendar.date(from: comps),
+              let range = calendar.range(of: .day, in: .month, for: start) else { return result }
+        for day in range {
+            if let d = calendar.date(from: DateComponents(year: year, month: month, day: day)) {
+                result.append(d)
+            }
+        }
+        return result
+    }
+}
 
-    // MARK: - Week View
-    private var weekView: some View {
-        let weekStart = startOfWeek(for: selectedDate)
+struct WeekPage: View {
+    let date: Date
+    let workoutDays: Set<Date>
+    let colorForDay: (Date) -> Color
+    let colorForWorkout: (WorkoutModel) -> Color
+    let onDayTap: (Date) -> Void
+    
+    @EnvironmentObject private var dataManager: DataManager
+    private let calendar = Calendar.current
+    
+    var body: some View {
+        let weekStart = startOfWeek(for: date)
         let days = (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: weekStart) }
-
+        
         return VStack(spacing: 0) {
-            // Day strips
             HStack(spacing: 6) {
                 ForEach(days, id: \.self) { day in
                     let isWorkout = workoutDays.contains(day)
                     let isToday = calendar.isDateInToday(day)
-                    Button(action: {
-                        dayDetailDate = day
-                        showingDayDetail = true
-                    }) {
+                    Button(action: { onDayTap(day) }) {
                         VStack(spacing: 6) {
                             Text(shortWeekday(for: day))
                                 .font(.caption2).foregroundColor(.secondary)
                             ZStack {
                                 Circle()
-                                    .fill(isWorkout ? colorFor(day: day) :
+                                    .fill(isWorkout ? colorForDay(day) :
                                             isToday ? Color.accentColor.opacity(0.2) : Color(.systemGray6))
                                     .frame(width: 44, height: 44)
                                 Text("\(calendar.component(.day, from: day))")
                                     .font(.system(size: 15, weight: isToday ? .bold : .regular))
                                     .foregroundColor(isWorkout ? .white : .primary)
                             }
-                            // Dot if has workout
                             Circle()
-                                .fill(isWorkout ? colorFor(day: day) : Color.clear)
+                                .fill(isWorkout ? colorForDay(day) : Color.clear)
                                 .frame(width: 5, height: 5)
                         }
                         .frame(maxWidth: .infinity)
@@ -265,10 +406,9 @@ struct CalendarView: View {
                 }
             }
             .padding()
-
+            
             Divider()
-
-            // Workouts for each day with a workout this week
+            
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
                     ForEach(days, id: \.self) { day in
@@ -283,7 +423,7 @@ struct CalendarView: View {
                                 ForEach(dayWorkouts) { w in
                                     HStack {
                                         RoundedRectangle(cornerRadius: 3)
-                                            .fill(colorFor(workout: w))
+                                            .fill(colorForWorkout(w))
                                             .frame(width: 4)
                                         VStack(alignment: .leading) {
                                             Text(w.name).font(.subheadline).fontWeight(.medium)
@@ -307,52 +447,58 @@ struct CalendarView: View {
                 .padding(.vertical, 8)
             }
         }
-        .transition(.slide)
     }
-
-    // MARK: - Helpers
-    private func daysInMonth(year: Int, month: Int) -> [Date] {
-        var result: [Date] = []
-        let comps = DateComponents(year: year, month: month)
-        guard let start = calendar.date(from: comps),
-              let range = calendar.range(of: .day, in: .month, for: start) else { return result }
-        for day in range {
-            if let d = calendar.date(from: DateComponents(year: year, month: month, day: day)) {
-                result.append(d)
-            }
-        }
-        return result
-    }
-
+    
     private func startOfWeek(for date: Date) -> Date {
         let comps = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
         return calendar.date(from: comps) ?? date
     }
-
+    
     private func shortWeekday(for date: Date) -> String {
         let sym = calendar.shortWeekdaySymbols
         let idx = calendar.component(.weekday, from: date) - 1
         return String(sym[idx].prefix(1))
     }
+}
 
-    private func colorFor(day: Date) -> Color {
-        guard workoutDays.contains(day) else { return Color.clear }
-        let dayWorkouts = dataManager.workouts.filter { calendar.isDate($0.date, inSameDayAs: day) }
-        let splits = Set(dayWorkouts.compactMap { $0.split?.id.uuidString })
-        if splits.count > 1 {
-            return themeManager.multipleSplitsColor
-        } else if let splitId = splits.first, let c = themeManager.splitColors[splitId] {
-            return c
-        } else {
-            return themeManager.calendarBoxColor
-        }
+struct DayPage: View {
+    let date: Date
+    @EnvironmentObject private var dataManager: DataManager
+    private let calendar = Calendar.current
+    
+    private var workoutsOnDate: [WorkoutModel] {
+        dataManager.workouts.filter { calendar.isDate($0.date, inSameDayAs: date) }
     }
-
-    private func colorFor(workout: WorkoutModel) -> Color {
-        if let splitId = workout.split?.id.uuidString, let c = themeManager.splitColors[splitId] {
-            return c
+    
+    var body: some View {
+        Group {
+            if workoutsOnDate.isEmpty {
+                VStack(spacing: 16) {
+                    Image(systemName: "calendar.badge.exclamationmark")
+                        .font(.system(size: 50)).foregroundColor(.secondary)
+                    Text("No Workouts")
+                        .font(.title3.bold())
+                    Text("Nothing was logged on this day.")
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List {
+                    ForEach(workoutsOnDate) { workout in
+                        NavigationLink(destination: WorkoutDetailView(workout: workout)) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(workout.name).font(.headline)
+                                Text("\(workout.exerciseArray.count) exercises · \(workout.duration) min")
+                                    .font(.caption).foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                }
+                .listStyle(InsetGroupedListStyle())
+            }
         }
-        return themeManager.calendarBoxColor
     }
 }
 
@@ -362,14 +508,14 @@ struct MiniMonthView: View {
     let month: Int
     let colorForDay: (Date) -> Color
     let onMonthTap: (Date) -> Void
-
+    
     private let calendar = Calendar.current
     private let columns = Array(repeating: GridItem(.fixed(16), spacing: 2), count: 7)
-
+    
     private var monthName: String {
         DateFormatter().monthSymbols[month - 1]
     }
-
+    
     private var days: [Date] {
         var result: [Date] = []
         let comps = DateComponents(year: year, month: month)
@@ -382,87 +528,37 @@ struct MiniMonthView: View {
         }
         return result
     }
-
+    
     private var leadingBlanks: Int {
         guard let first = days.first else { return 0 }
         return (calendar.component(.weekday, from: first) - 1)
     }
-
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Button(action: {
-                let comps = DateComponents(year: year, month: month, day: 1)
-                if let d = calendar.date(from: comps) { onMonthTap(d) }
-            }) {
+        Button(action: {
+            let comps = DateComponents(year: year, month: month, day: 1)
+            if let d = calendar.date(from: comps) { onMonthTap(d) }
+        }) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(monthName)
                     .font(.caption).fontWeight(.semibold)
                     .foregroundColor(.primary)
-            }
-            .buttonStyle(.plain)
-
-            LazyVGrid(columns: columns, spacing: 2) {
-                ForEach(0..<leadingBlanks, id: \.self) { _ in Color.clear.frame(width: 16, height: 16) }
-                ForEach(days, id: \.self) { day in
-                    let c = colorForDay(day)
-                    Rectangle()
-                        .fill(c == .clear ? Color(.systemGray5) : c)
-                        .frame(width: 16, height: 16)
-                        .cornerRadius(3)
+                
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 1), count: 7), spacing: 1) {
+                    ForEach(0..<leadingBlanks, id: \.self) { _ in Color.clear.aspectRatio(1, contentMode: .fit) }
+                    ForEach(days, id: \.self) { day in
+                        let c = colorForDay(day)
+                        Rectangle()
+                            .fill(c == .clear ? Color(.systemGray5) : c)
+                            .aspectRatio(1, contentMode: .fit)
+                            .cornerRadius(2)
+                    }
                 }
             }
+            .padding(8)
+            .frame(minHeight: 140, alignment: .top) // Consistent height for all months
+            .background(RoundedRectangle(cornerRadius: 10).fill(Color(.systemGray6)))
         }
-        .padding(8)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color(.systemGray6)))
-    }
-}
-
-// MARK: - Day Workout Detail Sheet
-struct DayWorkoutDetailSheet: View {
-    let date: Date
-    @EnvironmentObject private var dataManager: DataManager
-    @Environment(\.presentationMode) var presentationMode
-    private let calendar = Calendar.current
-
-    private var workoutsOnDate: [WorkoutModel] {
-        dataManager.workouts.filter { calendar.isDate($0.date, inSameDayAs: date) }
-    }
-
-    var body: some View {
-        NavigationView {
-            Group {
-                if workoutsOnDate.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "calendar.badge.exclamationmark")
-                            .font(.system(size: 50)).foregroundColor(.secondary)
-                        Text("No Workouts")
-                            .font(.title3.bold())
-                        Text("Nothing was logged on \(date.formatted(.dateTime.weekday().month().day().year())).")
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    List {
-                        Section(header: Text(date.formatted(.dateTime.weekday(.wide).month().day().year()))) {
-                            ForEach(workoutsOnDate) { workout in
-                                NavigationLink(destination: WorkoutDetailView(workout: workout)) {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(workout.name).font(.headline)
-                                        Text("\(workout.exerciseArray.count) exercises · \(workout.duration) min")
-                                            .font(.caption).foregroundColor(.secondary)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    .listStyle(InsetGroupedListStyle())
-                }
-            }
-            .navigationTitle("Workout Log")
-            .navigationBarItems(trailing: Button("Done") {
-                presentationMode.wrappedValue.dismiss()
-            })
-        }
+        .buttonStyle(.plain)
     }
 }

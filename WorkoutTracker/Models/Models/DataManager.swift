@@ -78,6 +78,20 @@ class DataManager: ObservableObject {
         get { UserDefaults.standard.string(forKey: "lastSyncedDataHash") }
         set { UserDefaults.standard.set(newValue, forKey: "lastSyncedDataHash") }
     }
+    
+    // Feature 8: Click back settings
+    @Published var clickBackEnabled: Bool = UserDefaults.standard.bool(forKey: "clickBackEnabled") {
+        didSet { UserDefaults.standard.set(clickBackEnabled, forKey: "clickBackEnabled") }
+    }
+    @Published var clickBackDepth: Int = UserDefaults.standard.integer(forKey: "clickBackDepth") == 0 ? 1 : UserDefaults.standard.integer(forKey: "clickBackDepth") {
+        didSet { UserDefaults.standard.set(clickBackDepth, forKey: "clickBackDepth") }
+    }
+    
+    // Navigation triggers for popping to root
+    @Published var popToRootWorkout: Int = 0
+    @Published var popToRootProgress: Int = 0
+    @Published var popToRootCalendar: Int = 0
+    @Published var popToRootSettings: Int = 0
 
     init() {
         container = NSPersistentContainer(name: "WorkoutTracker")

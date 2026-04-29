@@ -5,6 +5,7 @@ struct ProgressView: View {
     @EnvironmentObject private var dataManager: DataManager
     @State private var selectedExercise = ""
     @State private var timeFrame = 90 // Days
+    @State private var navigationId = UUID()
     
     private var exerciseNames: [String] {
         var names = Set<String>()
@@ -111,6 +112,10 @@ struct ProgressView: View {
                     selectedExercise = exerciseNames[0]
                 }
             }
+        }
+        .id(navigationId)
+        .onReceive(dataManager.$popToRootProgress) { _ in
+            navigationId = UUID()
         }
     }
     
