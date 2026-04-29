@@ -1,40 +1,24 @@
 import SwiftUI
 
 // Helper for user exercise library
-// Moved this struct OUTSIDE of AddExerciseView
 struct UserExerciseLibrary {
     static let keyPrefix = "userExercises_"
 
     static func getExercises(for type: ExerciseType, dataManager: DataManager = DataManager.shared) -> [String] {
-        // Get default exercises for this type
         let defaultExercises = ExerciseLibrary.exercises[type] ?? []
-
-        // Get all exercises from workouts for this type
         let workoutExercises = dataManager.workouts.flatMap { $0.exerciseArray }
             .filter { $0.exerciseTypeEnum == type }
             .map { $0.name }
-
-        // Get custom exercises from UserDefaults
         let key = keyPrefix + type.rawValue
         let userExercises = UserDefaults.standard.stringArray(forKey: key) ?? []
-
-        // Only keep custom exercises that are still present in workouts
         let validCustomExercises = userExercises.filter { workoutExercises.contains($0) }
-
-        // Combine default and valid custom exercises, removing duplicates
         let allExercises = Array(Set(defaultExercises + validCustomExercises)).sorted()
         return allExercises
     }
 
-    // Updated addExercise:
-    // Adds an exercise to the user's custom library for a given type,
-    // only if it's not part of the default library and not already in the user's list.
     static func addExercise(_ exerciseName: String, for type: ExerciseType) {
         let defaultExercises = ExerciseLibrary.exercises[type] ?? []
-        if defaultExercises.contains(exerciseName) {
-            return // Do not add if it's a default exercise
-        }
-
+        if defaultExercises.contains(exerciseName) { return }
         let key = keyPrefix + type.rawValue
         var userExercisesForType = getExercises(for: type)
         if !userExercisesForType.contains(exerciseName) {
@@ -43,8 +27,6 @@ struct UserExerciseLibrary {
         }
     }
 
-    // New removeExercise function:
-    // Removes an exercise from the user's custom library for a given type.
     static func removeExercise(_ exerciseName: String, for type: ExerciseType) {
         let key = keyPrefix + type.rawValue
         var userExercisesForType = getExercises(for: type)
@@ -58,17 +40,17 @@ struct UserExerciseLibrary {
 struct AddExerciseView: View {
     @EnvironmentObject private var dataManager: DataManager
     @Environment(\.presentationMode) var presentationMode
-    
+    @FocusState private var focusedField: ExerciseField?
+
     @AppStorage("weightUnit") private var defaultWeightUnit: String = "kg"
     @State private var weightUnit: String
-    
+
     let workout: WorkoutModel
-    
+
     @State private var name = ""
     @State private var selectedExerciseType: ExerciseType
     @State private var selectedExercise = ""
-    
-    // Fields for all exercise types
+
     @State private var sets = ""
     @State private var reps = ""
     @State private var weight = ""
@@ -77,16 +59,17 @@ struct AddExerciseView: View {
     @State private var calories = ""
     @State private var holdTime = ""
     @State private var notes = ""
-    
+
     @State private var showingExerciseList = false
-    
-    // Add initializer to accept preselected type
+
+    enum ExerciseField: Hashable { case sets, reps, weight, duration, distance, calories, holdTime, notes }
+
     init(workout: WorkoutModel, preselectedType: ExerciseType? = nil) {
         self.workout = workout
         _selectedExerciseType = State(initialValue: preselectedType ?? .strengthTraining)
         _weightUnit = State(initialValue: UserDefaults.standard.string(forKey: "weightUnit") ?? "kg")
     }
-    
+
     var body: some View {
         NavigationView {
             Form {
@@ -97,11 +80,10 @@ struct AddExerciseView: View {
                         }
                     }
                     .onChange(of: selectedExerciseType) { _ in
-                        // Clear the selected exercise when type changes
                         selectedExercise = ""
                     }
                 }
-                
+
                 Section(header: Text("Exercise")) {
                     if selectedExercise.isEmpty {
                         TextField("Custom Exercise Name", text: $name)
@@ -109,12 +91,9 @@ struct AddExerciseView: View {
                         HStack {
                             Text(selectedExercise)
                             Spacer()
-                            Button("Change") {
-                                showingExerciseList = true
-                            }
+                            Button("Change") { showingExerciseList = true }
                         }
                     }
-                    
                     Button(selectedExercise.isEmpty ? "Select from library" : "Choose different exercise") {
                         showingExerciseList = true
                     }
@@ -126,10 +105,8 @@ struct AddExerciseView: View {
                         )
                     }
                 }
-                
-                // Dynamic section based on selected exercise type
+
                 Section(header: Text("Exercise Details")) {
-                    // Add unit picker before weight field
                     Picker("Unit", selection: $weightUnit) {
                         Text("kg").tag("kg")
                         Text("lbs").tag("lbs")
@@ -145,6 +122,7 @@ struct AddExerciseView: View {
                                 TextField("Sets", text: $sets)
                                     .keyboardType(.numberPad)
                                     .multilineTextAlignment(.trailing)
+                                    .focused($focusedField, equals: .sets)
                             }
                         case "Reps":
                             HStack {
@@ -153,6 +131,7 @@ struct AddExerciseView: View {
                                 TextField("Reps", text: $reps)
                                     .keyboardType(.numberPad)
                                     .multilineTextAlignment(.trailing)
+                                    .focused($focusedField, equals: .reps)
                             }
                         case "Weight (kg)":
                             HStack {
@@ -161,6 +140,7 @@ struct AddExerciseView: View {
                                 TextField("Weight", text: $weight)
                                     .keyboardType(.decimalPad)
                                     .multilineTextAlignment(.trailing)
+                                    .focused($focusedField, equals: .weight)
                             }
                         case "Duration (min)":
                             HStack {
@@ -169,6 +149,7 @@ struct AddExerciseView: View {
                                 TextField("Minutes", text: $duration)
                                     .keyboardType(.numberPad)
                                     .multilineTextAlignment(.trailing)
+                                    .focused($focusedField, equals: .duration)
                             }
                         case "Distance (km)":
                             HStack {
@@ -177,6 +158,7 @@ struct AddExerciseView: View {
                                 TextField("Kilometers", text: $distance)
                                     .keyboardType(.decimalPad)
                                     .multilineTextAlignment(.trailing)
+                                    .focused($focusedField, equals: .distance)
                             }
                         case "Calories":
                             HStack {
@@ -185,6 +167,7 @@ struct AddExerciseView: View {
                                 TextField("Calories", text: $calories)
                                     .keyboardType(.numberPad)
                                     .multilineTextAlignment(.trailing)
+                                    .focused($focusedField, equals: .calories)
                             }
                         case "Hold Time (sec)":
                             HStack {
@@ -193,16 +176,18 @@ struct AddExerciseView: View {
                                 TextField("Seconds", text: $holdTime)
                                     .keyboardType(.numberPad)
                                     .multilineTextAlignment(.trailing)
+                                    .focused($focusedField, equals: .holdTime)
                             }
                         default:
                             EmptyView()
                         }
                     }
-                    
+
                     TextField("Notes (Optional)", text: $notes, axis: .vertical)
                         .lineLimit(5)
+                        .focused($focusedField, equals: .notes)
                 }
-                
+
                 Section {
                     Button("Save") {
                         saveExercise()
@@ -215,14 +200,21 @@ struct AddExerciseView: View {
             .navigationBarItems(trailing: Button("Cancel") {
                 presentationMode.wrappedValue.dismiss()
             })
+            // Feature 2: Done button to dismiss number pad / keyboard
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        focusedField = nil
+                    }
+                    .fontWeight(.semibold)
+                }
+            }
         }
     }
-    
+
     private var isFormValid: Bool {
-        // Exercise name is required
         let hasName = !selectedExercise.isEmpty || !name.isEmpty
-        
-        // Validate required fields based on exercise type
         switch selectedExerciseType {
         case .strengthTraining, .functional:
             return hasName && !sets.isEmpty && !reps.isEmpty && !weight.isEmpty
@@ -234,45 +226,32 @@ struct AddExerciseView: View {
             return hasName && !sets.isEmpty && !reps.isEmpty
         }
     }
-    
-    // Helper for user exercise library
-    // Move this struct OUTSIDE of AddExerciseView
-    // UserExerciseLibrary struct has been moved to the top of the file.
 
     private func saveExercise() {
-        // Use the selected exercise name if available, otherwise use the custom name
         let exerciseName = selectedExercise.isEmpty ? name : selectedExercise
-    
-        // Updated logic for adding custom exercise:
-        // If a custom name was typed, try to add it to the user library.
-        // The UserExerciseLibrary.addExercise function now handles all necessary checks.
         if selectedExercise.isEmpty && !exerciseName.isEmpty {
             UserExerciseLibrary.addExercise(exerciseName, for: selectedExerciseType)
         }
-    
-        // Convert string values to appropriate types with safe defaults
+
         let setsValue = Int16(sets) ?? 0
         let repsValue = Int16(reps) ?? 0
-        var weightValue = Double(weight) ?? 0.0 // Keep as var for potential conversion
+        var weightValue = Double(weight) ?? 0.0
         let durationValue = Int16(duration) ?? 0
         let distanceValue = Double(distance) ?? 0.0
         let caloriesValue = Int16(calories) ?? 0
         let holdTimeValue = Int16(holdTime) ?? 0
-    
-        // Convert weight to KG if the user entered it in LBS
+
         if weightUnit == "lbs" {
-            // Convert lbs to kg - the user entered the weight in lbs, so we need to convert to kg for storage
-            weightValue = weightValue / 2.20462 // Convert lbs to kg (more precise than multiplying by 0.453592)
+            weightValue = weightValue / 2.20462
         }
-        // If weightUnit is already "kg", no conversion needed as the user entered in kg
-    
+
         let _ = ExerciseModel.createExercise(
             context: dataManager.container.viewContext,
             name: exerciseName,
             exerciseType: selectedExerciseType,
             sets: setsValue,
             reps: repsValue,
-            weight: weightValue, // Save the (potentially converted) kg value
+            weight: weightValue,
             duration: durationValue,
             distance: distanceValue,
             calories: caloriesValue,
@@ -281,10 +260,8 @@ struct AddExerciseView: View {
             notes: notes.isEmpty ? nil : notes,
             workout: workout
         )
-    
-        // Save the user's preferred weight unit
+
         UserDefaults.standard.set(weightUnit, forKey: "weightUnit")
-        
         dataManager.save()
         presentationMode.wrappedValue.dismiss()
     }
@@ -295,15 +272,14 @@ struct ExerciseListView: View {
     let exerciseType: ExerciseType
     @Binding var selectedExercise: String
     @Binding var isPresented: Bool
-    
+
     var body: some View {
         NavigationView {
             List {
-                // Merge default and user exercises, removing duplicates
                 let defaultExercises = ExerciseLibrary.exercises[exerciseType] ?? []
                 let userExercises = UserExerciseLibrary.getExercises(for: exerciseType)
                 let allExercises = Array(Set(defaultExercises + userExercises)).sorted()
-                
+
                 ForEach(allExercises, id: \.self) { exercise in
                     Button {
                         selectedExercise = exercise

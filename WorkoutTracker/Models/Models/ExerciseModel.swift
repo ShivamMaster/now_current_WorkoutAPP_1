@@ -1,115 +1,92 @@
 import Foundation
 import CoreData
+import SwiftUI
 
-// Exercise type enum to categorize different exercises
-enum ExerciseType: String, CaseIterable, Identifiable {
+// MARK: - Exercise Type Enum
+enum ExerciseType: String, CaseIterable, Identifiable, Codable {
     case strengthTraining = "Strength Training"
     case cardio = "Cardio"
     case flexibility = "Flexibility"
     case bodyweight = "Bodyweight"
     case functional = "Functional"
-    
+
     var id: String { self.rawValue }
-    
-    // Return appropriate measurement fields for each type
+
     var measurementFields: [String] {
         switch self {
-        case .strengthTraining:
+        case .strengthTraining, .functional:
             return ["Sets", "Reps", "Weight (kg)"]
         case .cardio:
             return ["Duration (min)", "Distance (km)", "Calories"]
         case .flexibility:
-            return ["Duration (min)", "Sets", "Hold Time (sec)"]
+            return ["Sets", "Duration (min)", "Hold Time (sec)"]
         case .bodyweight:
-            return ["Set^s", "Reps"]
-        case .functional:
-            return ["Sets", "Reps", "Weight (kg)"]
+            return ["Sets", "Reps"]
         }
     }
 }
 
-// Dictionary of common exercises categorized by type
+// MARK: - Exercise Library
 struct ExerciseLibrary {
     static let exercises: [ExerciseType: [String]] = [
         .strengthTraining: [
-            "Bench Press",
-            "Squat",
-            "Deadlift",
-            "Shoulder Press",
-            "Lat Pulldown",
-            "Bicep Curl",
-            "Tricep Extension",
-            "Leg Press",
-            "Leg Extension",
-            "Leg Curl",
-            "Chest Fly",
-            "Chest Row",
-            "T-Bar Row",
-            "Cable Row",
-            "Barbell Row"
+            "Bench Press", "Squat", "Deadlift", "Overhead Press",
+            "Barbell Row", "Incline Bench Press", "Romanian Deadlift",
+            "Leg Press", "Lateral Raise", "Bicep Curl", "Tricep Extension"
         ],
         .cardio: [
-            "Treadmill",
-            "Elliptical",
-            "Stair Climber",
-            "Exercise Bike",
-            "Rowing Machine",
-            "Jump Rope",
-            "Swimming",
-            "Running",
-            "Cycling"
+            "Running", "Cycling", "Swimming", "Rowing",
+            "Jump Rope", "Stair Climber", "Elliptical"
         ],
         .flexibility: [
-            "Hamstring Stretch",
-            "Quad Stretch",
-            "Shoulder Stretch",
-            "Hip Flexor Stretch",
-            "Calf Stretch",
-            "Yoga",
-            "Pilates"
+            "Hamstring Stretch", "Hip Flexor Stretch", "Shoulder Stretch",
+            "Quad Stretch", "Calf Stretch", "Pigeon Pose", "Child's Pose"
         ],
         .bodyweight: [
-            "Push-up",
-            "Pull-up",
-            "Dip",
-            "Plank",
-            "Sit-up",
-            "Crunch",
-            "Burpee",
-            "Lunge",
-            "Squat Jump",
-            "Mountain Climber"
+            "Push-Ups", "Pull-Ups", "Dips", "Bodyweight Squats",
+            "Lunges", "Plank", "Burpees", "Mountain Climbers"
         ],
         .functional: [
-            "Kettlebell Swing",
-            "Battle Ropes",
-            "Box Jump",
-            "Medicine Ball Throw",
-            "TRX Suspension Training",
-            "Sled Push/Pull",
-            "Farmer's Walk"
+            "Kettlebell Swing", "Box Jump", "Battle Ropes", "TRX Row",
+            "Medicine Ball Slam", "Farmers Walk", "Sled Push"
         ]
     ]
 }
 
+// MARK: - ExerciseModel Core Data Class
 class ExerciseModel: NSManagedObject, Identifiable {
     @NSManaged public var id: UUID
     @NSManaged public var name: String
+    @NSManaged public var exerciseType: String?
     @NSManaged public var sets: Int16
     @NSManaged public var reps: Int16
     @NSManaged public var weight: Double
-    @NSManaged public var order: Int16
-    @NSManaged public var notes: String?
-    @NSManaged public var workout: WorkoutModel?
-    
-    // Additional fields for different exercise types
-    @NSManaged public var exerciseType: String
     @NSManaged public var duration: Int16
     @NSManaged public var distance: Double
     @NSManaged public var calories: Int16
     @NSManaged public var holdTime: Int16
-    
-    // Factory method to create an exercise
+    @NSManaged public var order: Int16
+    @NSManaged public var notes: String?
+    @NSManaged public var workout: WorkoutModel?
+
+    var exerciseTypeEnum: ExerciseType {
+        get { ExerciseType(rawValue: exerciseType ?? "") ?? .strengthTraining }
+        set { exerciseType = newValue.rawValue }
+    }
+
+    var primaryMetrics: String {
+        switch exerciseTypeEnum {
+        case .strengthTraining, .functional:
+            return "\(sets) sets × \(reps) reps @ \(String(format: "%g", weight)) kg"
+        case .cardio:
+            return "\(duration) min · \(String(format: "%.1f", distance)) km · \(calories) kcal"
+        case .flexibility:
+            return "\(sets) sets · \(duration) min · \(holdTime)s hold"
+        case .bodyweight:
+            return "\(sets) sets × \(reps) reps"
+        }
+    }
+
     static func createExercise(
         context: NSManagedObjectContext,
         name: String,
@@ -121,7 +98,7 @@ class ExerciseModel: NSManagedObject, Identifiable {
         distance: Double = 0.0,
         calories: Int16 = 0,
         holdTime: Int16 = 0,
-        order: Int16,
+        order: Int16 = 0,
         notes: String? = nil,
         workout: WorkoutModel
     ) -> ExerciseModel {
@@ -141,23 +118,4 @@ class ExerciseModel: NSManagedObject, Identifiable {
         exercise.workout = workout
         return exercise
     }
-    
-    // Helper method to get the exercise type enum
-    var exerciseTypeEnum: ExerciseType {
-        return ExerciseType(rawValue: exerciseType) ?? .strengthTraining
-    }
-    
-    // Get appropriate display string based on exercise type
-    var primaryMetrics: String {
-        switch exerciseTypeEnum {
-        case .strengthTraining, .functional:
-            return "\(sets) sets × \(reps) reps × \(String(format: "%.1f", weight)) kg"
-        case .cardio:
-            return "\(duration) min, \(String(format: "%.1f", distance)) km, \(calories) cal"
-        case .flexibility:
-            return "\(duration) min, \(sets) sets, \(holdTime) sec hold"
-        case .bodyweight:
-            return "\(sets) sets × \(reps) reps"
-        }
-    }
-} 
+}

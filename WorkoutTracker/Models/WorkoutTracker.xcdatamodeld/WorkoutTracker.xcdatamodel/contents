@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21754" systemVersion="22F82" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="" currentVersion="WorkoutTracker">
     <entity name="Exercise" representedClassName=".ExerciseModel" syncable="YES">
+        <attribute name="calories" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="distance" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="duration" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="exerciseType" optional="YES" attributeType="String"/>
+        <attribute name="holdTime" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
@@ -12,10 +17,18 @@
     </entity>
     <entity name="Workout" representedClassName=".WorkoutModel" syncable="YES">
         <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dayName" optional="YES" attributeType="String"/>
         <attribute name="duration" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
         <relationship name="exercises" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Exercise" inverseName="workout" inverseEntity="Exercise"/>
+        <relationship name="split" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="WorkoutSplit" inverseName="workouts" inverseEntity="WorkoutSplit"/>
     </entity>
-</model>  
+    <entity name="WorkoutSplit" representedClassName=".WorkoutSplitModel" syncable="YES">
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String"/>
+        <relationship name="workouts" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Workout" inverseName="split" inverseEntity="Workout"/>
+    </entity>
+</model>
