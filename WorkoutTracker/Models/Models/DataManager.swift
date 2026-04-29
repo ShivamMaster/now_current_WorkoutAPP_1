@@ -81,10 +81,16 @@ class DataManager: ObservableObject {
     
     // Feature 8: Click back settings
     @Published var clickBackEnabled: Bool = UserDefaults.standard.bool(forKey: "clickBackEnabled") {
-        didSet { UserDefaults.standard.set(clickBackEnabled, forKey: "clickBackEnabled") }
+        didSet {
+            UserDefaults.standard.set(clickBackEnabled, forKey: "clickBackEnabled")
+            scheduleHashCheck()
+        }
     }
     @Published var clickBackDepth: Int = UserDefaults.standard.integer(forKey: "clickBackDepth") == 0 ? 1 : UserDefaults.standard.integer(forKey: "clickBackDepth") {
-        didSet { UserDefaults.standard.set(clickBackDepth, forKey: "clickBackDepth") }
+        didSet {
+            UserDefaults.standard.set(clickBackDepth, forKey: "clickBackDepth")
+            scheduleHashCheck()
+        }
     }
     
     // Navigation triggers for popping to root
@@ -432,6 +438,7 @@ class DataManager: ObservableObject {
         }
         set {
             UserDefaults.standard.set(newValue.rawValue, forKey: "dataRetentionPolicy")
+            scheduleHashCheck()
         }
     }
     

@@ -10,6 +10,10 @@ struct UserSettings: Codable {
     var reminderTime: Date
     var darkModeEnabled: Bool
     var calendarBoxColorHex: String?
+    // Added for feature sync
+    var clickBackEnabled: Bool?
+    var clickBackDepth: Int?
+    var dataRetentionPolicy: String?
 }
 
 // MARK: - Backup Serialization Models (Splits-aware)
@@ -69,6 +73,11 @@ class UserSettingsManager: ObservableObject {
             if let hex = settings.calendarBoxColorHex, let c = Color(hex: hex) {
                 ThemeManager.shared.calendarBoxColor = c
             }
+            if let cb = settings.clickBackEnabled { DataManager.shared.clickBackEnabled = cb }
+            if let cd = settings.clickBackDepth { DataManager.shared.clickBackDepth = cd }
+            if let drp = settings.dataRetentionPolicy, let policy = DataRetentionPolicy(rawValue: drp) {
+                DataManager.shared.dataRetentionPolicy = policy
+            }
         }
     }
 }
@@ -98,7 +107,10 @@ extension DataManager {
             notificationsEnabled: UserSettingsManager.shared.notificationsEnabled,
             reminderTime: UserSettingsManager.shared.reminderTime,
             darkModeEnabled: ThemeManager.shared.isDarkMode,
-            calendarBoxColorHex: ThemeManager.shared.calendarBoxColor.toHex()
+            calendarBoxColorHex: ThemeManager.shared.calendarBoxColor.toHex(),
+            clickBackEnabled: self.clickBackEnabled,
+            clickBackDepth: self.clickBackDepth,
+            dataRetentionPolicy: self.dataRetentionPolicy.rawValue
         )
 
         let backup = BackupData(
@@ -108,6 +120,7 @@ extension DataManager {
         )
 
         let enc = JSONEncoder(); enc.dateEncodingStrategy = .iso8601
+        enc.outputFormatting = [.sortedKeys, .prettyPrinted] // Ensure deterministic output for hash verification
         guard let data = try? enc.encode(backup) else { return nil }
         return String(data: data, encoding: .utf8)
     }

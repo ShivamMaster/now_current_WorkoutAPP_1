@@ -69,21 +69,25 @@ class KeychainHelper {
     static let standard = KeychainHelper()
     private init() {}
 
+    private let server = "firebase.google.com"
+
     func save(_ data: Data, service: String, account: String) {
         let query = [
             kSecValueData: data,
-            kSecClass: kSecClassGenericPassword,
-            kSecAttrService: service,
-            kSecAttrAccount: account
+            kSecClass: kSecClassInternetPassword,
+            kSecAttrServer: server,
+            kSecAttrAccount: account,
+            kSecAttrSynchronizable: kCFBooleanTrue
         ] as CFDictionary
 
         let status = SecItemAdd(query, nil)
 
         if status == errSecDuplicateItem {
             let queryToUpdate = [
-                kSecAttrService: service,
+                kSecClass: kSecClassInternetPassword,
+                kSecAttrServer: server,
                 kSecAttrAccount: account,
-                kSecClass: kSecClassGenericPassword
+                kSecAttrSynchronizable: kCFBooleanTrue
             ] as CFDictionary
 
             let attributesToUpdate = [kSecValueData: data] as CFDictionary
@@ -99,15 +103,31 @@ class KeychainHelper {
 
     func read(service: String, account: String) -> Data? {
         let query = [
-            kSecAttrService: service,
+            kSecClass: kSecClassInternetPassword,
+            kSecAttrServer: server,
             kSecAttrAccount: account,
-            kSecClass: kSecClassGenericPassword,
+            kSecAttrSynchronizable: kCFBooleanTrue,
             kSecReturnData: true
         ] as CFDictionary
 
         var result: AnyObject?
-        SecItemCopyMatching(query, &result)
-        return result as? Data
+        let status = SecItemCopyMatching(query, &result)
+        
+        if status == errSecSuccess {
+            return result as? Data
+        } else {
+            let fallbackQuery = [
+                kSecClass: kSecClassInternetPassword,
+                kSecAttrServer: server,
+                kSecAttrAccount: account,
+                kSecReturnData: true
+            ] as CFDictionary
+            var fallbackResult: AnyObject?
+            if SecItemCopyMatching(fallbackQuery, &fallbackResult) == errSecSuccess {
+                return fallbackResult as? Data
+            }
+        }
+        return nil
     }
 
     func read(service: String, account: String) -> String? {
