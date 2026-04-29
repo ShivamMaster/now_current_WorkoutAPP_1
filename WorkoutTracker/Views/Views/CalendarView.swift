@@ -158,8 +158,7 @@ struct CalendarView: View {
                     MiniMonthView(
                         year: calendar.component(.year, from: selectedDate),
                         month: month,
-                        workoutDays: workoutDays,
-                        accentColor: themeManager.calendarBoxColor
+                        colorForDay: colorFor(day:)
                     ) { tappedDate in
                         selectedDate = tappedDate
                         withAnimation { calendarMode = .month }
@@ -205,7 +204,7 @@ struct CalendarView: View {
                         }) {
                             ZStack {
                                 Circle()
-                                    .fill(isWorkout ? themeManager.calendarBoxColor :
+                                    .fill(isWorkout ? colorFor(day: day) :
                                             isToday ? Color.accentColor.opacity(0.15) : Color(.systemGray6))
                                     .frame(width: 38, height: 38)
                                 Text("\(calendar.component(.day, from: day))")
@@ -243,7 +242,7 @@ struct CalendarView: View {
                                 .font(.caption2).foregroundColor(.secondary)
                             ZStack {
                                 Circle()
-                                    .fill(isWorkout ? themeManager.calendarBoxColor :
+                                    .fill(isWorkout ? colorFor(day: day) :
                                             isToday ? Color.accentColor.opacity(0.2) : Color(.systemGray6))
                                     .frame(width: 44, height: 44)
                                 Text("\(calendar.component(.day, from: day))")
@@ -252,7 +251,7 @@ struct CalendarView: View {
                             }
                             // Dot if has workout
                             Circle()
-                                .fill(isWorkout ? themeManager.calendarBoxColor : Color.clear)
+                                .fill(isWorkout ? colorFor(day: day) : Color.clear)
                                 .frame(width: 5, height: 5)
                         }
                         .frame(maxWidth: .infinity)
@@ -284,7 +283,7 @@ struct CalendarView: View {
                                 ForEach(dayWorkouts) { w in
                                     HStack {
                                         RoundedRectangle(cornerRadius: 3)
-                                            .fill(themeManager.calendarBoxColor)
+                                            .fill(colorFor(workout: w))
                                             .frame(width: 4)
                                         VStack(alignment: .leading) {
                                             Text(w.name).font(.subheadline).fontWeight(.medium)
@@ -335,14 +334,33 @@ struct CalendarView: View {
         let idx = calendar.component(.weekday, from: date) - 1
         return String(sym[idx].prefix(1))
     }
+
+    private func colorFor(day: Date) -> Color {
+        guard workoutDays.contains(day) else { return Color.clear }
+        let dayWorkouts = dataManager.workouts.filter { calendar.isDate($0.date, inSameDayAs: day) }
+        let splits = Set(dayWorkouts.compactMap { $0.split?.id.uuidString })
+        if splits.count > 1 {
+            return themeManager.multipleSplitsColor
+        } else if let splitId = splits.first, let c = themeManager.splitColors[splitId] {
+            return c
+        } else {
+            return themeManager.calendarBoxColor
+        }
+    }
+
+    private func colorFor(workout: WorkoutModel) -> Color {
+        if let splitId = workout.split?.id.uuidString, let c = themeManager.splitColors[splitId] {
+            return c
+        }
+        return themeManager.calendarBoxColor
+    }
 }
 
 // MARK: - Mini Month View (used in Year view)
 struct MiniMonthView: View {
     let year: Int
     let month: Int
-    let workoutDays: Set<Date>
-    let accentColor: Color
+    let colorForDay: (Date) -> Color
     let onMonthTap: (Date) -> Void
 
     private let calendar = Calendar.current
@@ -385,9 +403,9 @@ struct MiniMonthView: View {
             LazyVGrid(columns: columns, spacing: 2) {
                 ForEach(0..<leadingBlanks, id: \.self) { _ in Color.clear.frame(width: 16, height: 16) }
                 ForEach(days, id: \.self) { day in
-                    let isWorkout = workoutDays.contains(day)
+                    let c = colorForDay(day)
                     Rectangle()
-                        .fill(isWorkout ? accentColor : Color(.systemGray5))
+                        .fill(c == .clear ? Color(.systemGray5) : c)
                         .frame(width: 16, height: 16)
                         .cornerRadius(3)
                 }

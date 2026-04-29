@@ -51,6 +51,27 @@ class ThemeManager: ObservableObject {
         }
     }
 
+    // Split-specific colors mapping (Split ID string to Color)
+    @Published var splitColors: [String: Color] {
+        didSet {
+            let hexDict = splitColors.compactMapValues { $0.toHex() }
+            if let data = try? JSONEncoder().encode(hexDict) {
+                UserDefaults.standard.set(data, forKey: "SplitColorsDict")
+            }
+            DataManager.shared.scheduleHashCheck()
+        }
+    }
+
+    // Color to represent days with 2 or more different splits
+    @Published var multipleSplitsColor: Color {
+        didSet {
+            if let hex = multipleSplitsColor.toHex() {
+                UserDefaults.standard.set(hex, forKey: "MultipleSplitsColor")
+            }
+            DataManager.shared.scheduleHashCheck()
+        }
+    }
+
     init() {
         // Load isDarkMode
         self.isDarkMode = UserDefaults.standard.bool(forKey: "isDarkMode")
@@ -73,6 +94,22 @@ class ThemeManager: ObservableObject {
             self.calendarBoxColor = c
         } else {
             self.calendarBoxColor = .blue
+        }
+
+        // Load multipleSplitsColor
+        if let hex = UserDefaults.standard.string(forKey: "MultipleSplitsColor"),
+           let c = Color(hex: hex) {
+            self.multipleSplitsColor = c
+        } else {
+            self.multipleSplitsColor = .purple
+        }
+
+        // Load splitColors
+        if let data = UserDefaults.standard.data(forKey: "SplitColorsDict"),
+           let hexDict = try? JSONDecoder().decode([String: String].self, from: data) {
+            self.splitColors = hexDict.compactMapValues { Color(hex: $0) }
+        } else {
+            self.splitColors = [:]
         }
     }
 }

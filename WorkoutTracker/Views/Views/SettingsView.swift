@@ -22,6 +22,9 @@ struct SettingsView: View {
     @State private var alertTitle = ""
     @State private var alertMessage = ""
 
+    // Keyboard focus state for Done button
+    @FocusState private var isFocused: Bool
+
     // Feature 5: Retention
     @State private var selectedRetention: DataRetentionPolicy = DataManager.shared.dataRetentionPolicy
     @State private var showingRetentionConfirm = false
@@ -40,16 +43,20 @@ struct SettingsView: View {
                                 .textContentType(.password)
                                 .autocapitalization(.none)
                                 .disableAutocorrection(true)
+                                .focused($isFocused)
                             TextField("Project ID", text: $projectId)
                                 .textContentType(.username)
                                 .autocapitalization(.none)
                                 .disableAutocorrection(true)
+                                .focused($isFocused)
                             TextField("Google App ID", text: $googleAppId)
                                 .autocapitalization(.none)
                                 .disableAutocorrection(true)
+                                .focused($isFocused)
                             TextField("GCM Sender ID", text: $gcmSenderId)
                                 .autocapitalization(.none)
                                 .disableAutocorrection(true)
+                                .focused($isFocused)
 
                             Button("Save & Connect") { saveAndConnect() }
                                 .disabled(apiKey.isEmpty || projectId.isEmpty || googleAppId.isEmpty || gcmSenderId.isEmpty)
@@ -67,6 +74,7 @@ struct SettingsView: View {
                         .textContentType(.username)
                         .autocapitalization(.none)
                         .disableAutocorrection(true)
+                        .focused($isFocused)
 
                     Button(action: { showingBackupConfirmation = true }) {
                         HStack {
@@ -116,7 +124,10 @@ struct SettingsView: View {
                 }
 
                 Section(header: Text("Calendar Color")) {
-                    ColorPicker("Workout Day Color", selection: $themeManager.calendarBoxColor)
+                    ColorPicker("Default Workout Color", selection: $themeManager.calendarBoxColor)
+                    NavigationLink(destination: SplitColorsView()) {
+                        Text("Customize Split Colors")
+                    }
                 }
 
                 Section(header: Text("About")) {
@@ -171,6 +182,14 @@ struct SettingsView: View {
                             Text("Success!")
                                 .font(.title2).fontWeight(.bold).foregroundColor(.white)
                         }
+                    }
+                }
+            }
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        isFocused = false
                     }
                 }
             }

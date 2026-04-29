@@ -25,6 +25,7 @@
 		AA01000000000022 /* Models/SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01000000000023 /* Models/SettingsManager.swift */; };
 		AA01000000000024 /* Views/CategoryWorkoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01000000000025 /* Views/CategoryWorkoutView.swift */; };
 		AA01000000000026 /* Views/SplashScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01000000000027 /* Views/SplashScreen.swift */; };
+		AA01000000000028 /* Views/SplitColorsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01000000000029 /* Views/SplitColorsView.swift */; };
 		D45393272F381C6E00345144 /* success-animation.json in Resources */ = {isa = PBXBuildFile; fileRef = D45393262F381C6E00345144 /* success-animation.json */; };
 		1A2B3C4D5E6F7G8H9I0J1A2L /* Views/WorkoutDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2M /* Views/WorkoutDetailView.swift */; };
 		1A2B3C4D5E6F7G8H9I0J1A2N /* Views/ExerciseDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F7G8H9I0J1A2O /* Views/ExerciseDetailView.swift */; };
@@ -100,6 +101,7 @@
 		AA01000000000023 /* Models/SettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/SettingsManager.swift; sourceTree = "<group>"; };
 		AA01000000000025 /* Views/CategoryWorkoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/CategoryWorkoutView.swift; sourceTree = "<group>"; };
 		AA01000000000027 /* Views/SplashScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/SplashScreen.swift; sourceTree = "<group>"; };
+		AA01000000000029 /* Views/SplitColorsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/SplitColorsView.swift; sourceTree = "<group>"; };
 		AA01000000000002 /* Models/WorkoutSplitModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/WorkoutSplitModel.swift; sourceTree = "<group>"; };
 		AA01000000000004 /* Models/DataManagerSerialization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/DataManagerSerialization.swift; sourceTree = "<group>"; };
 		AA01000000000006 /* Views/SplitListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/SplitListView.swift; sourceTree = "<group>"; };
@@ -202,6 +204,7 @@
 				1A2B3C4D5E6F7G8H9I0J1A2W /* Views/SettingsView.swift */,
 				AA01000000000025 /* Views/CategoryWorkoutView.swift */,
 				AA01000000000027 /* Views/SplashScreen.swift */,
+				AA01000000000029 /* Views/SplitColorsView.swift */,
 				AA01000000000006 /* Views/SplitListView.swift */,
 				AA01000000000008 /* Views/CalendarView.swift */,
 			);
@@ -362,6 +365,7 @@
 				AA01000000000022 /* Models/SettingsManager.swift in Sources */,
 				AA01000000000024 /* Views/CategoryWorkoutView.swift in Sources */,
 				AA01000000000026 /* Views/SplashScreen.swift in Sources */,
+				AA01000000000028 /* Views/SplitColorsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

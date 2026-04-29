@@ -49,30 +49,50 @@ struct SplashScreen: View {
 struct MainTabView: View {
     @EnvironmentObject private var dataManager: DataManager
     @EnvironmentObject private var themeManager: ThemeManager
+    @Environment(\.scenePhase) var scenePhase
+    @State private var showUnsyncedAlert = false
+    @State private var selectedTab = 0
     
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             WorkoutListView()
                 .tabItem {
                     Label("Workouts", systemImage: "list.bullet")
                 }
+                .tag(0)
             
             ProgressView()
                 .tabItem {
                     Label("Progress", systemImage: "chart.line.uptrend.xyaxis")
                 }
+                .tag(1)
             
             CalendarView()
                 .tabItem {
                     Label("Calendar", systemImage: "calendar")
                 }
+                .tag(2)
             
             SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gear")
                 }
+                .tag(3)
         }
         .accentColor(.blue)
+        .onChange(of: scenePhase) { newPhase in
+            if newPhase == .inactive && dataManager.hasUnsyncedChanges {
+                showUnsyncedAlert = true
+            }
+        }
+        .alert("Unsynced Data", isPresented: $showUnsyncedAlert) {
+            Button("Yes, leave") { }
+            Button("No, take me to Settings") {
+                selectedTab = 3
+            }
+        } message: {
+            Text("Are you sure you want to leave? You still have unsynced data.")
+        }
     }
 }
 
