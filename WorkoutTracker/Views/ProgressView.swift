@@ -5,6 +5,7 @@ struct ProgressView: View {
     @EnvironmentObject private var dataManager: DataManager
     @State private var selectedExercise = ""
     @State private var timeFrame = 90 // Days
+    @State private var navigationId = UUID()
     
     private var exerciseNames: [String] {
         var names = Set<String>()
@@ -18,9 +19,16 @@ struct ProgressView: View {
         return Array(names).sorted()
     }
     
-    private var progressData: [(date: Date, weight: Double, reps: Int16, sets: Int16)] {
+    private var progressData: [(date: Date, exercise: ExerciseModel)] {
         guard !selectedExercise.isEmpty else { return [] }
-        return dataManager.getProgressData(for: selectedExercise, timeFrame: timeFrame)
+        return dataManager.getAdvancedProgressData(for: selectedExercise, timeFrame: timeFrame)
+    }
+    
+    private var selectedExerciseType: ExerciseType? {
+        if progressData.isEmpty {
+            return nil
+        }
+        return progressData.first?.exercise.exerciseTypeEnum
     }
     
     var body: some View {
@@ -60,67 +68,17 @@ struct ProgressView: View {
                                         description: Text("No workouts found within the selected time frame")
                                     )
                                 }
-                            } else {
-                                Section(header: Text("Weight Progress")) {
-                                    Chart {
-                                        ForEach(progressData, id: \.date) { item in
-                                            LineMark(
-                                                x: .value("Date", item.date),
-                                                y: .value("Weight", item.weight)
-                                            )
-                                            .foregroundStyle(Color.blue)
-                                            
-                                            PointMark(
-                                                x: .value("Date", item.date),
-                                                y: .value("Weight", item.weight)
-                                            )
-                                            .foregroundStyle(Color.blue)
-                                        }
-                                    }
-                                    .frame(height: 200)
-                                    .chartYAxis {
-                                        AxisMarks(position: .leading)
-                                    }
-                                    .chartXAxis {
-                                        AxisMarks(values: .stride(by: .day, count: 14)) { value in
-                                            if let date = value.as(Date.self) {
-                                                AxisValueLabel {
-                                                    Text(date, format: .dateTime.month().day())
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                
-                                Section(header: Text("Volume Progress (Sets × Reps)")) {
-                                    Chart {
-                                        ForEach(progressData, id: \.date) { item in
-                                            LineMark(
-                                                x: .value("Date", item.date),
-                                                y: .value("Volume", Double(item.sets * item.reps))
-                                            )
-                                            .foregroundStyle(Color.green)
-                                            
-                                            PointMark(
-                                                x: .value("Date", item.date),
-                                                y: .value("Volume", Double(item.sets * item.reps))
-                                            )
-                                            .foregroundStyle(Color.green)
-                                        }
-                                    }
-                                    .frame(height: 200)
-                                    .chartYAxis {
-                                        AxisMarks(position: .leading)
-                                    }
-                                    .chartXAxis {
-                                        AxisMarks(values: .stride(by: .day, count: 14)) { value in
-                                            if let date = value.as(Date.self) {
-                                                AxisValueLabel {
-                                                    Text(date, format: .dateTime.month().day())
-                                                }
-                                            }
-                                        }
-                                    }
+                            } else if let exerciseType = selectedExerciseType {
+                                // Display charts based on exercise type
+                                switch exerciseType {
+                                case .strengthTraining, .functional:
+                                    strengthTrainingCharts
+                                case .cardio:
+                                    cardioCharts
+                                case .flexibility:
+                                    flexibilityCharts
+                                case .bodyweight:
+                                    bodyweightCharts
                                 }
                                 
                                 Section(header: Text("Data Points")) {
@@ -129,15 +87,8 @@ struct ProgressView: View {
                                             Text(item.date, format: .dateTime.year().month().day())
                                                 .font(.headline)
                                             
-                                            HStack {
-                                                VStack(alignment: .leading) {
-                                                    Text("Weight: \(String(format: "%.1f", item.weight)) kg")
-                                                    Text("\(item.sets) sets × \(item.reps) reps")
-                                                }
-                                                Spacer()
-                                                Text("Total: \(item.sets * item.reps) reps")
-                                                    .foregroundColor(.secondary)
-                                            }
+                                            Text(item.exercise.primaryMetrics)
+                                                .foregroundColor(.secondary)
                                         }
                                         .padding(.vertical, 5)
                                     }
@@ -159,6 +110,245 @@ struct ProgressView: View {
             .onAppear {
                 if !exerciseNames.isEmpty && selectedExercise.isEmpty {
                     selectedExercise = exerciseNames[0]
+                }
+            }
+        }
+        .id(navigationId)
+        .onReceive(dataManager.$popToRootProgress) { _ in
+            navigationId = UUID()
+        }
+    }
+    
+    // MARK: - Chart Views for Different Exercise Types
+    
+    private var strengthTrainingCharts: some View {
+        Group {
+            Section(header: Text("Weight Progress")) {
+                Chart {
+                    ForEach(progressData, id: \.date) { item in
+                        LineMark(
+                            x: .value("Date", item.date),
+                            y: .value("Weight", item.exercise.weight)
+                        )
+                        .foregroundStyle(Color.blue)
+                        
+                        PointMark(
+                            x: .value("Date", item.date),
+                            y: .value("Weight", item.exercise.weight)
+                        )
+                        .foregroundStyle(Color.blue)
+                    }
+                }
+                .frame(height: 200)
+                .chartYAxis {
+                    AxisMarks(position: .leading)
+                }
+                .chartXAxis {
+                    AxisMarks(values: .stride(by: .day, count: 14)) { value in
+                        if let date = value.as(Date.self) {
+                            AxisValueLabel {
+                                Text(date, format: .dateTime.month().day())
+                            }
+                        }
+                    }
+                }
+            }
+            
+            Section(header: Text("Volume Progress (Sets × Reps)")) {
+                Chart {
+                    ForEach(progressData, id: \.date) { item in
+                        LineMark(
+                            x: .value("Date", item.date),
+                            y: .value("Volume", Double(item.exercise.sets * item.exercise.reps))
+                        )
+                        .foregroundStyle(Color.green)
+                        
+                        PointMark(
+                            x: .value("Date", item.date),
+                            y: .value("Volume", Double(item.exercise.sets * item.exercise.reps))
+                        )
+                        .foregroundStyle(Color.green)
+                    }
+                }
+                .frame(height: 200)
+                .chartYAxis {
+                    AxisMarks(position: .leading)
+                }
+                .chartXAxis {
+                    AxisMarks(values: .stride(by: .day, count: 14)) { value in
+                        if let date = value.as(Date.self) {
+                            AxisValueLabel {
+                                Text(date, format: .dateTime.month().day())
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private var cardioCharts: some View {
+        Group {
+            Section(header: Text("Duration Progress")) {
+                Chart {
+                    ForEach(progressData, id: \.date) { item in
+                        LineMark(
+                            x: .value("Date", item.date),
+                            y: .value("Duration", Double(item.exercise.duration))
+                        )
+                        .foregroundStyle(Color.orange)
+                        
+                        PointMark(
+                            x: .value("Date", item.date),
+                            y: .value("Duration", Double(item.exercise.duration))
+                        )
+                        .foregroundStyle(Color.orange)
+                    }
+                }
+                .frame(height: 200)
+                .chartYAxis {
+                    AxisMarks(position: .leading)
+                }
+                .chartXAxis {
+                    AxisMarks(values: .stride(by: .day, count: 14)) { value in
+                        if let date = value.as(Date.self) {
+                            AxisValueLabel {
+                                Text(date, format: .dateTime.month().day())
+                            }
+                        }
+                    }
+                }
+            }
+            
+            Section(header: Text("Distance Progress")) {
+                Chart {
+                    ForEach(progressData, id: \.date) { item in
+                        LineMark(
+                            x: .value("Date", item.date),
+                            y: .value("Distance", item.exercise.distance)
+                        )
+                        .foregroundStyle(Color.purple)
+                        
+                        PointMark(
+                            x: .value("Date", item.date),
+                            y: .value("Distance", item.exercise.distance)
+                        )
+                        .foregroundStyle(Color.purple)
+                    }
+                }
+                .frame(height: 200)
+                .chartYAxis {
+                    AxisMarks(position: .leading)
+                }
+                .chartXAxis {
+                    AxisMarks(values: .stride(by: .day, count: 14)) { value in
+                        if let date = value.as(Date.self) {
+                            AxisValueLabel {
+                                Text(date, format: .dateTime.month().day())
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private var flexibilityCharts: some View {
+        Group {
+            Section(header: Text("Hold Time Progress")) {
+                Chart {
+                    ForEach(progressData, id: \.date) { item in
+                        LineMark(
+                            x: .value("Date", item.date),
+                            y: .value("Hold Time", Double(item.exercise.holdTime))
+                        )
+                        .foregroundStyle(Color.teal)
+                        
+                        PointMark(
+                            x: .value("Date", item.date),
+                            y: .value("Hold Time", Double(item.exercise.holdTime))
+                        )
+                        .foregroundStyle(Color.teal)
+                    }
+                }
+                .frame(height: 200)
+                .chartYAxis {
+                    AxisMarks(position: .leading)
+                }
+                .chartXAxis {
+                    AxisMarks(values: .stride(by: .day, count: 14)) { value in
+                        if let date = value.as(Date.self) {
+                            AxisValueLabel {
+                                Text(date, format: .dateTime.month().day())
+                            }
+                        }
+                    }
+                }
+            }
+            
+            Section(header: Text("Duration Progress")) {
+                Chart {
+                    ForEach(progressData, id: \.date) { item in
+                        LineMark(
+                            x: .value("Date", item.date),
+                            y: .value("Duration", Double(item.exercise.duration))
+                        )
+                        .foregroundStyle(Color.orange)
+                        
+                        PointMark(
+                            x: .value("Date", item.date),
+                            y: .value("Duration", Double(item.exercise.duration))
+                        )
+                        .foregroundStyle(Color.orange)
+                    }
+                }
+                .frame(height: 200)
+                .chartYAxis {
+                    AxisMarks(position: .leading)
+                }
+                .chartXAxis {
+                    AxisMarks(values: .stride(by: .day, count: 14)) { value in
+                        if let date = value.as(Date.self) {
+                            AxisValueLabel {
+                                Text(date, format: .dateTime.month().day())
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private var bodyweightCharts: some View {
+        Group {
+            Section(header: Text("Volume Progress (Sets × Reps)")) {
+                Chart {
+                    ForEach(progressData, id: \.date) { item in
+                        LineMark(
+                            x: .value("Date", item.date),
+                            y: .value("Volume", Double(item.exercise.sets * item.exercise.reps))
+                        )
+                        .foregroundStyle(Color.green)
+                        
+                        PointMark(
+                            x: .value("Date", item.date),
+                            y: .value("Volume", Double(item.exercise.sets * item.exercise.reps))
+                        )
+                        .foregroundStyle(Color.green)
+                    }
+                }
+                .frame(height: 200)
+                .chartYAxis {
+                    AxisMarks(position: .leading)
+                }
+                .chartXAxis {
+                    AxisMarks(values: .stride(by: .day, count: 14)) { value in
+                        if let date = value.as(Date.self) {
+                            AxisValueLabel {
+                                Text(date, format: .dateTime.month().day())
+                            }
+                        }
+                    }
                 }
             }
         }
