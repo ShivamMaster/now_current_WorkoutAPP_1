@@ -1,6 +1,9 @@
 import Foundation
 import CoreData
 
+// MARK: - Workout Entity
+/// Core Data model representing a single workout session.
+/// A workout contains multiple exercises and optionally belongs to a specific split.
 class WorkoutModel: NSManagedObject, Identifiable {
     @NSManaged public var id: UUID
     @NSManaged public var date: Date
@@ -11,7 +14,8 @@ class WorkoutModel: NSManagedObject, Identifiable {
     @NSManaged public var exercises: NSSet?
     @NSManaged public var split: WorkoutSplitModel?
 
-    // Computed property to get exercises as an array
+    // MARK: - Computed Properties
+    /// Returns the associated exercises as an array, sorted by their defined order.
     var exerciseArray: [ExerciseModel] {
         let set = exercises as? Set<ExerciseModel> ?? []
         return set.sorted {
@@ -19,7 +23,8 @@ class WorkoutModel: NSManagedObject, Identifiable {
         }
     }
 
-    // Factory method to create a workout
+    // MARK: - Factory Methods
+    /// Creates and returns a new workout instance in the provided context.
     static func createWorkout(context: NSManagedObjectContext, name: String, date: Date, duration: Int16, notes: String? = nil, dayName: String? = nil, split: WorkoutSplitModel? = nil) -> WorkoutModel {
         let workout = WorkoutModel(context: context)
         workout.id = UUID()

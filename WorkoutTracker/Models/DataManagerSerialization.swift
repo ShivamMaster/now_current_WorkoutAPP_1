@@ -1,37 +1,52 @@
+// MARK: - Data Manager Serialization
+/// This file extends `DataManager` with functionality for exporting and importing workout data as JSON.
+/// it also manages global user settings persistence and provides the models for cloud-synchronized backups.
+
 import Foundation
 import CoreData
 import SwiftUI
 import WidgetKit
 
-// MARK: - UserSettings
+// MARK: - User Settings Model
+/// Represents the global application preferences that are synchronized alongside workout data.
 struct UserSettings: Codable {
     var weightUnit: String
     var notificationsEnabled: Bool
     var reminderTime: Date
     var darkModeEnabled: Bool
     var calendarBoxColorHex: String?
-    // Added for feature sync
+    
+    // MARK: Navigation Preferences
     var clickBackEnabled: Bool?
     var clickBackDepth: Int?
+    
+    // MARK: Retention Preferences
     var dataRetentionPolicy: String?
 }
 
-// MARK: - Backup Serialization Models (Splits-aware)
+// MARK: - Backup Serialization Models
+/// Intermediate representation of a training split for JSON serialization.
 struct SerializedBackupSplit: Codable {
     let name: String
     let createdAt: Date
     let workouts: [SerializedWorkout]
 }
 
+/// The top-level container for all data exported or imported from the cloud.
 struct BackupData: Codable {
-    let splits: [SerializedBackupSplit]?       // new format
-    let workouts: [SerializedWorkout]?         // legacy / splitless workouts
+    /// List of organized splits and their workouts.
+    let splits: [SerializedBackupSplit]?
+    /// List of workouts not associated with any specific split (legacy or individual sessions).
+    let workouts: [SerializedWorkout]?
+    /// The application settings to be restored.
     let settings: UserSettings
 }
 
-// MARK: - UserSettingsManager
+// MARK: - User Settings Manager
+/// A singleton responsible for managing and persisting global application preferences locally.
 class UserSettingsManager: ObservableObject {
     static let shared = UserSettingsManager()
+    
     @Published var weightUnit: String = "kg" { didSet { saveUserSettings() } }
     @Published var notificationsEnabled: Bool = false { didSet { saveUserSettings() } }
     @Published var reminderTime: Date = Date() { didSet { saveUserSettings() } }
@@ -43,15 +58,20 @@ class UserSettingsManager: ObservableObject {
             reminderTime = s.reminderTime; darkModeEnabled = s.darkModeEnabled
         }
     }
+    
     private static func settingsFileURL() -> URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("Settings.json")
     }
+    
+    /// Loads user settings from the local file system.
     static func loadUserSettings() -> UserSettings? {
         guard let data = try? Data(contentsOf: settingsFileURL()) else { return nil }
         let dec = JSONDecoder(); dec.dateDecodingStrategy = .iso8601
         return try? dec.decode(UserSettings.self, from: data)
     }
+    
+    /// Persists current user settings to a JSON file in the document directory.
     private func saveUserSettings() {
         let s = UserSettings(
             weightUnit: weightUnit, notificationsEnabled: notificationsEnabled,
@@ -63,6 +83,9 @@ class UserSettingsManager: ObservableObject {
             try? data.write(to: UserSettingsManager.settingsFileURL())
         }
     }
+    
+    /// Applies a set of `UserSettings` to the current application state.
+    /// This is typically called after a cloud restore operation.
     func applyUserSettings(_ settings: UserSettings) {
         DispatchQueue.main.async {
             UserDefaults.standard.set(settings.weightUnit, forKey: "weightUnit")
@@ -85,7 +108,9 @@ class UserSettingsManager: ObservableObject {
 // MARK: - DataManager Export / Import
 extension DataManager {
 
-    // MARK: Export
+    // MARK: - Data Export
+    /// Serializes all workouts, training splits, and user settings into a JSON string for cloud backup.
+    /// - Returns: A pretty-printed JSON string if successful, otherwise `nil`.
     func exportDataJSON() -> String? {
         fetchWorkouts(); fetchSplits()
 
@@ -145,7 +170,11 @@ extension DataManager {
         )
     }
 
-    // MARK: Import
+    // MARK: - Data Import
+    /// Parses a JSON string and restores the application state, including workouts, splits, and settings.
+    /// - Parameters:
+    ///   - json: The JSON string to parse.
+    ///   - completion: A block executed on the main thread with the result of the operation.
     func importDataJSON(json: String, completion: @escaping (Bool) -> Void) {
         guard let data = json.data(using: .utf8) else { completion(false); return }
         let dec = JSONDecoder(); dec.dateDecodingStrategy = .iso8601

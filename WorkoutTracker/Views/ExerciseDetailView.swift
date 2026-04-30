@@ -1,14 +1,21 @@
 import SwiftUI
 import Foundation
 
+// MARK: - Exercise Detail View
+/// A comprehensive view for viewing and updating the specifics of an individual exercise.
+/// Handles unit conversion (kg/lbs) and displays relevant measurement fields based on exercise type.
 struct ExerciseDetailView: View {
     @EnvironmentObject private var dataManager: DataManager
     @Environment(\.presentationMode) var presentationMode
+    
+    // MARK: - App Storage & Focus
     @AppStorage("weightUnit") private var displayWeightUnit: String = "kg"
     @FocusState private var focusedField: ExerciseField?
 
+    /// The exercise model being displayed.
     let exercise: ExerciseModel
 
+    // MARK: - Form State
     @State private var name: String
     @State private var selectedExerciseType: ExerciseType
     @State private var sets: String
@@ -20,12 +27,16 @@ struct ExerciseDetailView: View {
     @State private var holdTime: String
     @State private var notes: String
     @State private var isEditing = false
+    
+    // MARK: - Unit Conversion State
     @State private var editingWeightUnit: String
     @State private var internalWeightKg: Decimal
 
+    // MARK: - Constants
     private let kgToLbsFactor: Decimal = 2.20462
     private let lbsToKgFactor: Decimal = 0.453592
 
+    /// Fields available for focus management.
     enum ExerciseField: Hashable { case name, sets, reps, weight, duration, distance, calories, holdTime, notes }
 
     init(exercise: ExerciseModel) {

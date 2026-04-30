@@ -1,5 +1,7 @@
 import SwiftUI
 
+// MARK: - App Theme Mode
+/// Represents the supported visual themes for the application.
 enum AppThemeMode: String, CaseIterable, Identifiable {
     case light = "Light"
     case dark = "Dark"
@@ -7,6 +9,8 @@ enum AppThemeMode: String, CaseIterable, Identifiable {
     
     var id: String { self.rawValue }
     
+    /// Maps the theme mode to a SwiftUI `ColorScheme`.
+    /// Returns `nil` for `.system` to allow the OS to decide.
     var colorScheme: ColorScheme? {
         switch self {
         case .light: return .light
@@ -16,9 +20,14 @@ enum AppThemeMode: String, CaseIterable, Identifiable {
     }
 }
 
+/// Manages the application's visual style, including theme mode (light/dark) and custom accent colors.
 class ThemeManager: ObservableObject {
+    // MARK: - Singleton
+    /// Shared instance for global access.
     static let shared = ThemeManager()
     
+    // MARK: - Published Properties
+    /// Boolean indicating if dark mode is explicitly enabled.
     @Published var isDarkMode: Bool {
         didSet {
             UserDefaults.standard.set(isDarkMode, forKey: "isDarkMode")
@@ -26,11 +35,12 @@ class ThemeManager: ObservableObject {
             if themeMode != newMode {
                 themeMode = newMode
             }
-            // Feature 6: schedule a hash check instead of blindly marking unsynced
+            // Trigger sync status check since theme changes are considered "state".
             DataManager.shared.scheduleHashCheck()
         }
     }
 
+    /// The base color used for calendar indicators.
     @Published var calendarBoxColor: Color {
         didSet {
             if let hex = calendarBoxColor.toHex() {
@@ -40,6 +50,7 @@ class ThemeManager: ObservableObject {
         }
     }
 
+    /// The current theme selection (light, dark, or system).
     @Published var themeMode: AppThemeMode {
         didSet {
             UserDefaults.standard.set(themeMode.rawValue, forKey: "AppThemeMode")
@@ -51,7 +62,7 @@ class ThemeManager: ObservableObject {
         }
     }
 
-    // Split-specific colors mapping (Split ID string to Color)
+    /// A dictionary mapping split IDs to their specific UI color.
     @Published var splitColors: [String: Color] {
         didSet {
             let hexDict = splitColors.compactMapValues { $0.toHex() }
@@ -62,7 +73,7 @@ class ThemeManager: ObservableObject {
         }
     }
 
-    // Color to represent days with 2 or more different splits
+    /// The color used to highlight days with multiple different splits in the calendar.
     @Published var multipleSplitsColor: Color {
         didSet {
             if let hex = multipleSplitsColor.toHex() {

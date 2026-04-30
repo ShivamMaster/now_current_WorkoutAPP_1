@@ -1,5 +1,8 @@
 import SwiftUI
 
+// MARK: - Category Workout View
+/// An alternative visualization of a workout session, grouping exercises by their type (e.g., Strength, Cardio).
+/// Uses expandable sections (DisclosureGroups) for a clean, organized layout.
 struct CategoryWorkoutView: View {
     @EnvironmentObject private var dataManager: DataManager
     @State private var showingAddExercise = false

@@ -1,12 +1,17 @@
 import SwiftUI
 
-// MARK: - Split List View (Top-Level — replaces plain Workouts list)
+// MARK: - Split List View
+/// The primary interface for organizing workout routines into "splits" (e.g., Push/Pull/Legs).
+/// Replaces the generic workout list to provide a more structured training approach.
 struct SplitListView: View {
     @EnvironmentObject private var dataManager: DataManager
+    
+    // MARK: - Navigation & UI State
     @State private var showingAddSplit = false
+    /// Force-reset identifier for navigation stack management.
     @State private var navigationId = UUID()
     
-    // For renaming from the list
+    // MARK: - Inline Renaming State
     @State private var isRenamingSplit = false
     @State private var splitToRename: WorkoutSplitModel?
     @State private var newSplitName = ""

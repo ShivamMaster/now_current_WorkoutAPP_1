@@ -2,6 +2,9 @@ import SwiftUI
 import Lottie
 import UserNotifications
 
+// MARK: - Splash Screen
+/// The initial view shown when the app launches.
+/// Handles the transition from a branded splash screen to the main tab interface.
 struct SplashScreen: View {
     @State private var isActive = false
     @State private var size = 0.8
@@ -9,6 +12,7 @@ struct SplashScreen: View {
     
     var body: some View {
         if isActive {
+            // Transition to the main application interface once loading is complete.
             MainTabView()
         } else {
             ZStack {
@@ -30,6 +34,7 @@ struct SplashScreen: View {
                 .scaleEffect(size)
                 .opacity(opacity)
                 .onAppear {
+                    // Trigger entry animations.
                     withAnimation(.easeIn(duration: 1.2)) {
                         self.size = 1.0
                         self.opacity = 1.0
@@ -37,7 +42,10 @@ struct SplashScreen: View {
                 }
             }
             .onAppear {
+                // Request notification permissions for sync alerts.
                 UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in }
+                
+                // Pause for 2 seconds before entering the app.
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                     withAnimation {
                         self.isActive = true
@@ -48,24 +56,31 @@ struct SplashScreen: View {
     }
 }
 
+// MARK: - Main Tab Interface
+/// The primary navigation container for the application, organizing the main features into tabs.
 struct MainTabView: View {
     @EnvironmentObject private var dataManager: DataManager
     @EnvironmentObject private var themeManager: ThemeManager
     @Environment(\.scenePhase) var scenePhase
+    
+    /// Controls the visibility of the mandatory sync warning overlay.
     @State private var showUnsyncedAlert = false
+    
+    /// Tracks the currently selected tab.
     @State private var selectedTab = 0
+    
+    // MARK: - Click Back Properties
     @State private var lastTapTime: Date = Date()
     @State private var tapCount: Int = 0
     
     var body: some View {
+        // Custom binding to detect repeat taps on the same tab (for "Click Back" feature).
         let selectionBinding = Binding<Int>(
             get: { self.selectedTab },
             set: { newValue in
                 if newValue == self.selectedTab {
-                    // Tapped already selected tab
                     handleRepeatTap()
                 } else {
-                    // Switched tabs
                     self.selectedTab = newValue
                     self.tapCount = 0
                 }
@@ -98,9 +113,11 @@ struct MainTabView: View {
                 .tag(3)
         }
         .onChange(of: scenePhase) { _, newPhase in
+            // Handle app lifecycle events for data safety.
             if (newPhase == .inactive || newPhase == .active) && dataManager.hasUnsyncedChanges {
                 showUnsyncedAlert = true
-                UIApplication.shared.isIdleTimerDisabled = true // Prevent sleep if unsynced
+                // Prevent the device from sleeping while in the sync warning state.
+                UIApplication.shared.isIdleTimerDisabled = true
                 
                 if newPhase == .inactive {
                     sendUnsyncedNotification()
@@ -111,6 +128,7 @@ struct MainTabView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
+            // Aggressive guard against backgrounding with unsynced changes.
             if dataManager.hasUnsyncedChanges {
                 showUnsyncedAlert = true
             }
@@ -119,9 +137,13 @@ struct MainTabView: View {
             SyncWarningView(selectedTab: $selectedTab)
                 .environmentObject(dataManager)
         }
+        // Conditionally defer system gestures to prevent accidental backgrounding when unsynced.
         .defersSystemGestures(on: dataManager.hasUnsyncedChanges ? .bottom : [])
     }
     
+    // MARK: - Logic
+    
+    /// Handles repeated taps on an active tab to trigger a "Pop to Root" navigation event.
     private func handleRepeatTap() {
         guard dataManager.clickBackEnabled else { return }
         
@@ -130,13 +152,12 @@ struct MainTabView: View {
         lastTapTime = now
         
         if dataManager.clickBackDepth == 1 {
-            // Instant pop to root
             triggerPop()
         } else {
-            // 2 clicks required
-            if diff < 0.5 { // Within 500ms
+            // Requires two rapid taps (double-click style).
+            if diff < 0.5 {
                 tapCount += 1
-                if tapCount >= 1 { // Second tap (initial state was 0)
+                if tapCount >= 1 {
                     triggerPop()
                     tapCount = 0
                 }
@@ -146,6 +167,7 @@ struct MainTabView: View {
         }
     }
     
+    /// Increments the trigger counter for the current tab to signal a navigation reset.
     private func triggerPop() {
         switch selectedTab {
         case 0: dataManager.popToRootWorkout += 1
@@ -156,6 +178,7 @@ struct MainTabView: View {
         }
     }
 
+    /// Sends a local notification to the user if they background the app with unsynced data.
     private func sendUnsyncedNotification() {
         let content = UNMutableNotificationContent()
         content.title = "Unsynced Data!"

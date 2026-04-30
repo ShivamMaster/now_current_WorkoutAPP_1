@@ -1,17 +1,25 @@
+// MARK: - Firebase Configuration Manager
+/// Responsible for dynamic initialization of the Firebase SDK using project-specific credentials.
+/// It integrates with the Keychain to ensure credentials persist across app installations.
+
 import Foundation
 import FirebaseCore
 
 class FirebaseConfigManager: ObservableObject {
     static let shared = FirebaseConfigManager()
     
+    /// Tracks whether the Firebase SDK has been successfully initialized.
     @Published var isConfigured: Bool = false
     
+    // MARK: - Keychain Keys
     private let kApiKey = "firebase_apiKey"
     private let kProjectId = "firebase_projectId"
     private let kGoogleAppId = "firebase_googleAppId"
     private let kGcmSenderId = "firebase_gcmSenderId"
     
-    // Attempt to configure using saved credentials
+    // MARK: - Configuration Methods
+    /// Attempts to automatically configure Firebase using credentials stored in the Keychain.
+    /// - Returns: `true` if initialization succeeded, otherwise `false`.
     func attemptAutoConfigure() -> Bool {
         guard let apiKey = KeychainHelper.standard.readString(service: "firebase", account: kApiKey), !apiKey.isEmpty,
               let projectId = KeychainHelper.standard.readString(service: "firebase", account: kProjectId), !projectId.isEmpty,
@@ -24,7 +32,14 @@ class FirebaseConfigManager: ObservableObject {
         return configure(apiKey: apiKey, projectId: projectId, googleAppId: googleAppId, gcmSenderId: gcmSenderId, saveToKeychain: false)
     }
     
-    // Configure with specific credentials
+    /// Configures the Firebase environment with provided credentials.
+    /// - Parameters:
+    ///   - apiKey: The Firebase API Key.
+    ///   - projectId: The Firebase Project ID.
+    ///   - googleAppId: The Google App ID.
+    ///   - gcmSenderId: The GCM Sender ID.
+    ///   - saveToKeychain: If `true`, the credentials will be persisted to the device Keychain.
+    /// - Returns: `true` if configuration was successful.
     func configure(apiKey: String, projectId: String, googleAppId: String, gcmSenderId: String, saveToKeychain: Bool = false) -> Bool {
         if saveToKeychain {
             saveCredentials(apiKey: apiKey, projectId: projectId, googleAppId: googleAppId, gcmSenderId: gcmSenderId)
@@ -65,6 +80,8 @@ class FirebaseConfigManager: ObservableObject {
 }
 
 // MARK: - Keychain Helper
+/// A utility class for securely storing and retrieving data from the system Keychain.
+/// It uses `kSecClassInternetPassword` to ensure credentials appear in the Apple Passwords manager.
 class KeychainHelper {
     static let standard = KeychainHelper()
     private init() {}

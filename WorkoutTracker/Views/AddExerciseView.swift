@@ -1,24 +1,34 @@
 import SwiftUI
 
-// Helper for user exercise library
+// MARK: - User Exercise Library
+/// A helper utility for managing a user's persistent collection of exercise names.
+/// It combines default exercises with custom names provided by the user.
 struct UserExerciseLibrary {
+    /// Prefix for UserDefaults keys to differentiate exercise types.
     static let keyPrefix = "userExercises_"
 
+    /// Retrieves a merged list of default and user-defined exercises for a specific type.
     static func getExercises(for type: ExerciseType, dataManager: DataManager = DataManager.shared) -> [String] {
         let defaultExercises = ExerciseLibrary.exercises[type] ?? []
+        // Collect names already used in workouts for this type.
         let workoutExercises = dataManager.workouts.flatMap { $0.exerciseArray }
             .filter { $0.exerciseTypeEnum == type }
             .map { $0.name }
+        
         let key = keyPrefix + type.rawValue
         let userExercises = UserDefaults.standard.stringArray(forKey: key) ?? []
+        
+        // Only include custom exercises that are currently in use or were previously saved.
         let validCustomExercises = userExercises.filter { workoutExercises.contains($0) }
         let allExercises = Array(Set(defaultExercises + validCustomExercises)).sorted()
         return allExercises
     }
 
+    /// Persistently adds a new custom exercise name to the library.
     static func addExercise(_ exerciseName: String, for type: ExerciseType) {
         let defaultExercises = ExerciseLibrary.exercises[type] ?? []
         if defaultExercises.contains(exerciseName) { return }
+        
         let key = keyPrefix + type.rawValue
         var userExercisesForType = getExercises(for: type)
         if !userExercisesForType.contains(exerciseName) {
@@ -27,6 +37,7 @@ struct UserExerciseLibrary {
         }
     }
 
+    /// Removes a custom exercise name from the library.
     static func removeExercise(_ exerciseName: String, for type: ExerciseType) {
         let key = keyPrefix + type.rawValue
         var userExercisesForType = getExercises(for: type)
@@ -37,6 +48,9 @@ struct UserExerciseLibrary {
     }
 }
 
+// MARK: - Add Exercise View
+/// A form-based view for adding a new exercise to a workout session.
+/// Provides library selection and dynamic measurement fields.
 struct AddExerciseView: View {
     @EnvironmentObject private var dataManager: DataManager
     @Environment(\.presentationMode) var presentationMode

@@ -1,5 +1,7 @@
 import SwiftUI
 
+// MARK: - Add Workout View
+/// A simple form for creating a new workout session independently of a split.
 struct AddWorkoutView: View {
     @EnvironmentObject private var dataManager: DataManager
     @Environment(\.presentationMode) var presentationMode

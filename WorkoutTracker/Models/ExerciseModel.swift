@@ -2,7 +2,8 @@ import Foundation
 import CoreData
 import SwiftUI
 
-// MARK: - Exercise Type Enum
+// MARK: - Exercise Type
+/// Categorizes exercises to determine which metrics (reps, weight, distance, etc.) are relevant.
 enum ExerciseType: String, CaseIterable, Identifiable, Codable {
     case strengthTraining = "Strength Training"
     case cardio = "Cardio"
@@ -12,6 +13,7 @@ enum ExerciseType: String, CaseIterable, Identifiable, Codable {
 
     var id: String { self.rawValue }
 
+    /// SF Symbol name associated with the exercise type.
     var icon: String {
         switch self {
         case .strengthTraining: return "dumbbell.fill"
@@ -22,6 +24,7 @@ enum ExerciseType: String, CaseIterable, Identifiable, Codable {
         }
     }
 
+    /// Primary color associated with the exercise type for UI differentiation.
     var color: Color {
         switch self {
         case .strengthTraining: return .blue
@@ -32,6 +35,7 @@ enum ExerciseType: String, CaseIterable, Identifiable, Codable {
         }
     }
 
+    /// List of field labels that should be displayed for this exercise type.
     var measurementFields: [String] {
         switch self {
         case .strengthTraining, .functional:
@@ -73,7 +77,8 @@ struct ExerciseLibrary {
     ]
 }
 
-// MARK: - ExerciseModel Core Data Class
+// MARK: - Exercise Entity
+/// Core Data model representing an individual exercise within a workout.
 class ExerciseModel: NSManagedObject, Identifiable {
     @NSManaged public var id: UUID
     @NSManaged public var name: String
@@ -89,11 +94,13 @@ class ExerciseModel: NSManagedObject, Identifiable {
     @NSManaged public var notes: String?
     @NSManaged public var workout: WorkoutModel?
 
+    /// Helper to interact with the raw `exerciseType` string as a typed enum.
     var exerciseTypeEnum: ExerciseType {
         get { ExerciseType(rawValue: exerciseType ?? "") ?? .strengthTraining }
         set { exerciseType = newValue.rawValue }
     }
 
+    /// Formatted string summarizing the primary performance metrics based on the exercise type.
     var primaryMetrics: String {
         switch exerciseTypeEnum {
         case .strengthTraining, .functional:
@@ -107,6 +114,7 @@ class ExerciseModel: NSManagedObject, Identifiable {
         }
     }
 
+    /// Factory method to create a new exercise instance in a given context.
     static func createExercise(
         context: NSManagedObjectContext,
         name: String,

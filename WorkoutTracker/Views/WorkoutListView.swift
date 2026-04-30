@@ -1,6 +1,8 @@
 import SwiftUI
 
-// WorkoutListView now wraps SplitListView as the main workout tab entry point
+// MARK: - Workout List Entry Point
+/// A wrapper view that serves as the root for the Workouts tab.
+/// It currently displays the `SplitListView` as the primary interface for managing workout routines.
 struct WorkoutListView: View {
     var body: some View {
         SplitListView()
@@ -14,12 +16,15 @@ struct WorkoutListView_Previews: PreviewProvider {
     }
 }
 
-// MARK: - Sync Status Indicator (used in SplitListView toolbar)
+// MARK: - Sync Status Indicator
+/// A small UI component that displays the current synchronization state (synced/unsynced).
+/// Typically used in toolbars to provide quick visual feedback to the user.
 struct SyncStatusView: View {
     @EnvironmentObject private var dataManager: DataManager
 
     var body: some View {
         HStack(spacing: 6) {
+            // Status dot: Orange for unsynced, Green for synced.
             Circle()
                 .fill(dataManager.hasUnsyncedChanges ? Color.orange : Color.green)
                 .frame(width: 8, height: 8)

@@ -1,12 +1,22 @@
+// MARK: - Firebase Data Manager
+/// Handles the high-level synchronization of workout data with Google Cloud Firestore.
+/// This manager performs the actual upload and download of serialized JSON backups.
+
 import Foundation
 import FirebaseFirestore
 import FirebaseCore
+import UIKit
 
 class FirebaseManager: ObservableObject {
     static let shared = FirebaseManager()
     private let db = Firestore.firestore()
     
-    // Upload serialized JSON data to Firestore (Unified Backup)
+    // MARK: - Data Synchronization
+    /// Uploads a unified JSON backup to Firestore for a specific user ID.
+    /// - Parameters:
+    ///   - json: The serialized `BackupData` string.
+    ///   - userId: The unique identifier for the user's cloud storage slot.
+    ///   - completion: Executed upon completion with the result of the network operation.
     func uploadData(json: String, userId: String, completion: @escaping (Result<Void, Error>) -> Void) {
         // Check if Firebase is configured
         guard FirebaseApp.app() != nil else {
@@ -35,7 +45,10 @@ class FirebaseManager: ObservableObject {
         }
     }
     
-    // Download serialized JSON data from Firestore
+    /// Downloads the latest JSON backup for a specific user ID from Firestore.
+    /// - Parameters:
+    ///   - userId: The unique identifier for the user's cloud storage slot.
+    ///   - completion: Executed upon completion, providing either the JSON backup string or an error.
     func downloadData(userId: String, completion: @escaping (Result<String, Error>) -> Void) {
         // Check if Firebase is configured
         guard FirebaseApp.app() != nil else {

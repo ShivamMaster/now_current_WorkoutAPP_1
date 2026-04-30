@@ -1,20 +1,25 @@
 import SwiftUI
 import AuthenticationServices
 
+// MARK: - Settings View
+/// Provides a comprehensive interface for user configuration, cloud backup, and app preferences.
 struct SettingsView: View {
+    // MARK: - App Storage & Managers
+    /// Persisted weight unit preference.
     @AppStorage("weightUnit") private var weightUnit: String = "kg"
+    /// The unique identifier for cloud backups.
     @AppStorage("firebaseID") private var firebaseID: String = ""
     @ObservedObject private var themeManager = ThemeManager.shared
     @EnvironmentObject private var dataManager: DataManager
 
-    // Firebase Config
+    // MARK: - Firebase Configuration State
     @State private var apiKey = ""
     @State private var projectId = ""
     @State private var googleAppId = ""
     @State private var gcmSenderId = ""
     @State private var isConfigExpanded = false
 
-    // Alerts & Animation
+    // MARK: - Alerts & UI Animation State
     @State private var showingAlert = false
     @State private var showingBackupConfirmation = false
     @State private var showingConfirmation = false
@@ -22,12 +27,14 @@ struct SettingsView: View {
     @State private var alertTitle = ""
     @State private var alertMessage = ""
     @State private var showingKeychainPrompt = false
+    
+    /// Unique identifier to force view refresh during "pop to root" navigation.
     @State private var navigationId = UUID()
 
-    // Keyboard focus state for Done button
+    // MARK: - Keyboard Management
     @FocusState private var isFocused: Bool
 
-    // Feature 5: Retention
+    // MARK: - Retention Policy State
     @State private var selectedRetention: DataRetentionPolicy = DataManager.shared.dataRetentionPolicy
     @State private var showingRetentionConfirm = false
 
@@ -218,7 +225,6 @@ struct SettingsView: View {
                             .foregroundColor(.blue)
                     }
                     .help("Tapping the active tab icon will navigate back to the initial page.")
-                    // For iOS, help is not visible easily, let's use a small description below
                 }
                 
                 if dataManager.clickBackEnabled {

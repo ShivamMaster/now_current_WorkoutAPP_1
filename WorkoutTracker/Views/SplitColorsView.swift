@@ -1,5 +1,8 @@
 import SwiftUI
 
+// MARK: - Split Colors Customization View
+/// Allows users to personalize the colors associated with their workout splits.
+/// These colors are used throughout the app, most prominently in the Calendar.
 struct SplitColorsView: View {
     @EnvironmentObject private var dataManager: DataManager
     @EnvironmentObject private var themeManager: ThemeManager

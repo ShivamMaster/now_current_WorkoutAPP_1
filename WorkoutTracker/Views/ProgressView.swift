@@ -1,10 +1,18 @@
 import SwiftUI
 import Charts
 
+// MARK: - Progress Tracker View
+/// Visualizes historical workout data using dynamic charts and filtering.
 struct ProgressView: View {
     @EnvironmentObject private var dataManager: DataManager
+    
+    // MARK: - Filter State
+    /// The name of the exercise currently being tracked.
     @State private var selectedExercise = ""
-    @State private var timeFrame = 90 // Days
+    /// The lookback period for chart data, in days.
+    @State private var timeFrame = 90
+    
+    /// Unique identifier used to force a navigation reset.
     @State private var navigationId = UUID()
     
     private var exerciseNames: [String] {

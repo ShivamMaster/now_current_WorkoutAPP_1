@@ -1,19 +1,26 @@
 import SwiftUI
 
+// MARK: - Workout Detail View
+/// Displays and allows editing of a specific workout session's metadata and its associated exercises.
 struct WorkoutDetailView: View {
     @EnvironmentObject private var dataManager: DataManager
+    
+    // MARK: - View State
     @State private var showingAddExercise = false
     @FocusState private var focusedField: DetailField?
-
     @State private var isEditing = false
+
+    // MARK: - Form State
     @State private var name: String
     @State private var date: Date
     @State private var duration: String
     @State private var notes: String
     @State private var dayName: String
 
+    /// The workout model being displayed.
     let workout: WorkoutModel
 
+    /// Fields available for focus management.
     enum DetailField { case name, duration, notes, dayName }
 
     init(workout: WorkoutModel) {

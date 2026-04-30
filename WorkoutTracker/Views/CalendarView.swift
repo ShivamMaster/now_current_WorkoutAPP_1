@@ -1,6 +1,7 @@
 import SwiftUI
 
-// MARK: - Calendar Mode
+// MARK: - Calendar Navigation Mode
+/// Represents the different zoom levels for the calendar interface.
 enum CalendarMode: Int, Comparable {
     case year = 0
     case month = 1
@@ -12,24 +13,29 @@ enum CalendarMode: Int, Comparable {
     }
 }
 
+// MARK: - Calendar View
+/// A dynamic, zoomable calendar that visualizes workout frequency and split distribution.
+/// Supports year, month, week, and day views with smooth transitions.
 struct CalendarView: View {
     @EnvironmentObject private var dataManager: DataManager
     @EnvironmentObject private var themeManager: ThemeManager
     private let calendar = Calendar.current
     
+    // MARK: - View State
     @State private var mode: CalendarMode = .year
     @State private var referenceDate: Date = Date()
     
-    // Tab selection offsets (simulating infinite scroll)
+    // MARK: - Page Offsets
+    // These offsets simulate an infinite-scrolling experience across different zoom levels.
     @State private var yearOffset: Int = 0
     @State private var monthOffset: Int = 0
     @State private var weekOffset: Int = 0
     @State private var dayOffset: Int = 0
     
-    // For popping to root
+    /// Unique identifier used to force a view reset when "popping to root".
     @State private var navigationId = UUID()
     
-    // A stable base date for offset calculations
+    /// A stable reference point for calculating all temporal offsets.
     private let baseDate = Calendar.current.startOfDay(for: Date())
     
     private var workoutDays: Set<Date> {

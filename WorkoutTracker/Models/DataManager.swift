@@ -5,6 +5,8 @@ import WidgetKit
 import CryptoKit
 
 // MARK: - Data Retention Policy
+/// Defines the available time windows for keeping workout data locally.
+/// Data older than the selected window can be purged from the device after cloud backup.
 enum DataRetentionPolicy: String, CaseIterable, Identifiable {
     case week = "Last Week"
     case month = "Last Month"
@@ -13,6 +15,7 @@ enum DataRetentionPolicy: String, CaseIterable, Identifiable {
     
     var id: String { rawValue }
     
+    /// Calculates the starting date for the retention period.
     var cutoffDate: Date? {
         let cal = Calendar.current
         switch self {
@@ -54,38 +57,51 @@ struct SerializedSplit: Codable {
     let workouts: [SerializedWorkout]
 }
 
+/// The central authority for data persistence and state management in the application.
+/// Uses CoreData for local storage and handles sync status via hash comparisons.
 class DataManager: ObservableObject {
-    // Shared instance for easy access
+    // MARK: - Singleton
+    /// Shared instance for global access throughout the app.
     static let shared = DataManager()
 
-    // Core Data stack
+    // MARK: - Core Data Properties
+    /// The persistent container for the Core Data stack.
     let container: NSPersistentContainer
 
+    /// Reactive list of all workouts fetched from Core Data.
     @Published var workouts: [WorkoutModel] = []
+    
+    /// Reactive list of all workout splits fetched from Core Data.
     @Published var splits: [WorkoutSplitModel] = []
     
-    // MARK: - Hash-Based Sync Status (Feature 6)
+    // MARK: - Sync Status
+    /// Indicates if there are changes made locally that haven't been synced to the cloud.
+    /// This is calculated by comparing the current data hash with the last synced hash.
     @Published var hasUnsyncedChanges: Bool = false {
         didSet {
             UserDefaults.standard.set(hasUnsyncedChanges, forKey: "hasUnsyncedChanges")
         }
     }
     
+    /// Timer/Debouncer for hash calculation to avoid excessive CPU usage during rapid edits.
     private var hashCheckWorkItem: DispatchWorkItem?
     
-    /// The SHA-256 hash of the last successfully synced backup JSON
+    /// The SHA-256 hash of the last successfully synced backup JSON.
     private var lastSyncedHash: String? {
         get { UserDefaults.standard.string(forKey: "lastSyncedDataHash") }
         set { UserDefaults.standard.set(newValue, forKey: "lastSyncedDataHash") }
     }
     
-    // Feature 8: Click back settings
+    // MARK: - Navigation Features
+    /// Flag to enable "Click Back" functionality (popping to root on tab tap).
     @Published var clickBackEnabled: Bool = UserDefaults.standard.bool(forKey: "clickBackEnabled") {
         didSet {
             UserDefaults.standard.set(clickBackEnabled, forKey: "clickBackEnabled")
             scheduleHashCheck()
         }
     }
+    
+    /// Number of taps required to trigger a pop-to-root action.
     @Published var clickBackDepth: Int = UserDefaults.standard.integer(forKey: "clickBackDepth") == 0 ? 1 : UserDefaults.standard.integer(forKey: "clickBackDepth") {
         didSet {
             UserDefaults.standard.set(clickBackDepth, forKey: "clickBackDepth")
@@ -93,22 +109,26 @@ class DataManager: ObservableObject {
         }
     }
     
-    // Navigation triggers for popping to root
+    // MARK: - Navigation Trigger Signals
+    /// These counters act as signals to views to pop to their root navigation state.
     @Published var popToRootWorkout: Int = 0
     @Published var popToRootProgress: Int = 0
     @Published var popToRootCalendar: Int = 0
     @Published var popToRootSettings: Int = 0
 
+    // MARK: - Initialization
     init() {
         container = NSPersistentContainer(name: "WorkoutTracker")
 
+        // Use App Group container for sharing data between the main app and widgets.
         guard let groupContainerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.HiraGoel.WorkoutTracker") else {
             fatalError("Failed to get App Group container URL.")
         }
 
         let storeURL = groupContainerURL.appendingPathComponent("WorkoutTracker.sqlite")
         let description = NSPersistentStoreDescription(url: storeURL)
-        // Enable lightweight migration for new entities
+        
+        // Enable lightweight migration for automatic schema updates.
         description.shouldMigrateStoreAutomatically = true
         description.shouldInferMappingModelAutomatically = true
         container.persistentStoreDescriptions = [description]
@@ -116,26 +136,26 @@ class DataManager: ObservableObject {
         container.loadPersistentStores { description, error in
             if let error = error {
                 print("Error loading Core Data: \(error.localizedDescription)")
-                if let detailedError = error as NSError? {
-                    print("Detailed error: \(detailedError.userInfo)")
-                }
                 fatalError("Unresolved error \(error), \(error.localizedDescription)")
             } else {
                 print("Core Data model loaded successfully from App Group: \(storeURL.path)")
-                let entityNames = self.container.managedObjectModel.entities.map { $0.name ?? "Unknown" }
-                print("Loaded entities: \(entityNames.joined(separator: ", "))")
             }
         }
+        
+        // Automatically merge changes from background contexts if applicable.
         container.viewContext.automaticallyMergesChangesFromParent = true
+        
+        // Initial fetch of data.
         fetchWorkouts()
         fetchSplits()
         
-        // Restore persisted sync status
+        // Restore persisted sync status.
         hasUnsyncedChanges = UserDefaults.standard.bool(forKey: "hasUnsyncedChanges")
     }
 
     // MARK: - CRUD Operations
 
+    /// Fetches all workouts from Core Data, sorted by date descending.
     func fetchWorkouts() {
         let request: NSFetchRequest<WorkoutModel> = NSFetchRequest<WorkoutModel>(entityName: "Workout")
         request.sortDescriptors = [NSSortDescriptor(keyPath: \WorkoutModel.date, ascending: false)]
@@ -147,6 +167,7 @@ class DataManager: ObservableObject {
         }
     }
     
+    /// Fetches all workout splits from Core Data.
     func fetchSplits() {
         let request: NSFetchRequest<WorkoutSplitModel> = NSFetchRequest<WorkoutSplitModel>(entityName: "WorkoutSplit")
         request.sortDescriptors = [NSSortDescriptor(keyPath: \WorkoutSplitModel.createdAt, ascending: true)]
@@ -158,43 +179,48 @@ class DataManager: ObservableObject {
         }
     }
 
+    /// Saves the current view context changes to the persistent store.
+    /// Also reloads widget timelines to reflect updated data.
     func save() {
         if container.viewContext.hasChanges {
             do {
                 try container.viewContext.save()
                 fetchWorkouts()
                 fetchSplits()
+                // Update widgets.
                 WidgetCenter.shared.reloadTimelines(ofKind: "WorkoutCalendarWidget")
                 print("Context saved and widget timeline reloaded.")
-                // Feature 6: Schedule hash check after save
+                // Trigger hash check to update sync status.
                 scheduleHashCheck()
             } catch {
                 print("Error saving context: \(error.localizedDescription)")
-                let nserror = error as NSError
-                print("Unresolved error \(nserror), \(nserror.userInfo)")
             }
         } else {
             print("No changes to save in the context.")
         }
     }
 
-    // MARK: - Split CRUD
+    // MARK: - Split CRUD Operations
     
+    /// Creates and saves a new workout split.
     func addSplit(name: String) {
         let _ = WorkoutSplitModel.createSplit(context: container.viewContext, name: name)
         save()
     }
     
+    /// Deletes a workout split and its associated workouts.
     func deleteSplit(_ split: WorkoutSplitModel) {
         container.viewContext.delete(split)
         save()
     }
     
+    /// Updates the name of an existing split.
     func renameSplit(_ split: WorkoutSplitModel, newName: String) {
         split.name = newName
         save()
     }
 
+    /// Creates a deep copy of a split, including all its workouts and exercises.
     func duplicateSplit(_ split: WorkoutSplitModel) {
         let context = container.viewContext
         let newSplit = WorkoutSplitModel(context: context)
@@ -232,10 +258,11 @@ class DataManager: ObservableObject {
         save()
     }
 
-    // MARK: - Workout CRUD (now aware of splits)
+    // MARK: - Workout CRUD Operations
 
+    /// Creates and saves a new workout associated with an optional split.
     func addWorkout(name: String, date: Date, duration: Int16, notes: String? = nil, dayName: String? = nil, split: WorkoutSplitModel? = nil) {
-        let newWorkout = WorkoutModel.createWorkout(
+        let _ = WorkoutModel.createWorkout(
             context: container.viewContext,
             name: name,
             date: date,
@@ -244,10 +271,10 @@ class DataManager: ObservableObject {
             dayName: dayName,
             split: split
         )
-        _ = newWorkout
         save()
     }
 
+    /// Adds a new exercise to a specific workout.
     func addExercise(
         to workout: WorkoutModel,
         name: String,
@@ -280,6 +307,7 @@ class DataManager: ObservableObject {
         save()
     }
 
+    /// Updates an existing exercise with new values.
     func updateExercise(
         exercise: ExerciseModel,
         name: String? = nil,
@@ -309,6 +337,7 @@ class DataManager: ObservableObject {
         save()
     }
 
+    /// Updates an existing workout with new values.
     func updateWorkout(
         workout: WorkoutModel,
         name: String? = nil,
@@ -328,17 +357,19 @@ class DataManager: ObservableObject {
         save()
     }
 
+    /// Deletes a workout from Core Data.
     func deleteWorkout(_ workout: WorkoutModel) {
         container.viewContext.delete(workout)
         save()
     }
 
+    /// Deletes an exercise from Core Data.
     func deleteExercise(_ exercise: ExerciseModel) {
         container.viewContext.delete(exercise)
         save()
     }
     
-    // Duplicate an exercise within the same workout
+    /// Creates a copy of an exercise within the same workout.
     func duplicateExercise(_ exercise: ExerciseModel, in workout: WorkoutModel) {
         let newExercise = ExerciseModel(context: container.viewContext)
         newExercise.id = UUID()
@@ -357,7 +388,7 @@ class DataManager: ObservableObject {
         save()
     }
     
-    // Duplicate a workout
+    /// Creates a deep copy of a workout, including all its exercises.
     func duplicateWorkout(_ workout: WorkoutModel) {
         let newWorkout = WorkoutModel(context: container.viewContext)
         newWorkout.id = UUID()
@@ -386,7 +417,13 @@ class DataManager: ObservableObject {
         save()
     }
 
-    // Get workout data for a specific exercise for charts
+    // MARK: - Progress Data Queries
+
+    /// Fetches historical data for a specific exercise to be used in charts.
+    /// - Parameters:
+    ///   - exerciseName: The name of the exercise to track.
+    ///   - timeFrame: The number of days to look back.
+    /// - Returns: A sorted array of tuples containing date and measurement values.
     func getProgressData(for exerciseName: String, timeFrame: Int = 90) -> [(date: Date, weight: Double, reps: Int16, sets: Int16)] {
         let fromDate = Calendar.current.date(byAdding: .day, value: -timeFrame, to: Date()) ?? Date()
         let request: NSFetchRequest<WorkoutModel> = NSFetchRequest<WorkoutModel>(entityName: "Workout")
@@ -406,6 +443,7 @@ class DataManager: ObservableObject {
         return progressData
     }
     
+    /// Fetches advanced historical data for a specific exercise, returning the full model objects.
     func getAdvancedProgressData(for exerciseName: String, timeFrame: Int = 90) -> [(date: Date, exercise: ExerciseModel)] {
         let fromDate = Calendar.current.date(byAdding: .day, value: -timeFrame, to: Date()) ?? Date()
         let request: NSFetchRequest<WorkoutModel> = NSFetchRequest<WorkoutModel>(entityName: "Workout")
@@ -425,9 +463,10 @@ class DataManager: ObservableObject {
         return data
     }
 
-    // MARK: - Feature 6: Hash-Based Sync Status
+    // MARK: - Sync & Hash Logic
     
-    /// Computes SHA-256 of current exportable data. Returns nil if export fails.
+    /// Computes SHA-256 hash of the current local data set.
+    /// This is used to detect if local data differs from the cloud backup.
     func computeCurrentHash() -> String? {
         guard let json = exportDataJSON() else { return nil }
         let inputData = Data(json.utf8)
@@ -435,7 +474,8 @@ class DataManager: ObservableObject {
         return hashed.compactMap { String(format: "%02x", $0) }.joined()
     }
     
-    /// Schedule a debounced hash check (0.5s) to update sync status
+    /// Schedules a debounced check of the data hash.
+    /// Debouncing prevents excessive calculations during rapid consecutive edits.
     func scheduleHashCheck() {
         hashCheckWorkItem?.cancel()
         let workItem = DispatchWorkItem { [weak self] in
@@ -445,10 +485,11 @@ class DataManager: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: workItem)
     }
     
-    /// Compare current hash with synced hash and update hasUnsyncedChanges
+    /// Compares the current local data hash with the last known synced hash.
+    /// Updates `hasUnsyncedChanges` based on the result.
     func updateSyncStatus() {
         guard let storedHash = lastSyncedHash else {
-            // No backup ever made — mark unsynced only if there's data
+            // If no sync has ever occurred, mark as unsynced if there is any data to sync.
             hasUnsyncedChanges = !workouts.isEmpty || !splits.isEmpty
             return
         }
@@ -458,7 +499,7 @@ class DataManager: ObservableObject {
         }
     }
     
-    /// Mark data as synced by saving the current hash
+    /// Updates the `lastSyncedHash` to match the current data, indicating a successful sync.
     func markAsSynced() {
         if let hash = computeCurrentHash() {
             lastSyncedHash = hash
@@ -466,8 +507,9 @@ class DataManager: ObservableObject {
         hasUnsyncedChanges = false
     }
     
-    // MARK: - Feature 5: Data Retention Policy
+    // MARK: - Data Retention Management
     
+    /// The current policy for how long data should be kept locally.
     var dataRetentionPolicy: DataRetentionPolicy {
         get {
             let raw = UserDefaults.standard.string(forKey: "dataRetentionPolicy") ?? DataRetentionPolicy.allTime.rawValue
@@ -479,10 +521,10 @@ class DataManager: ObservableObject {
         }
     }
     
-    /// Delete workouts older than the current retention window locally.
-    /// Should only be called AFTER a successful cloud backup.
+    /// Applies the retention policy by deleting local workouts that fall outside the retention window.
+    /// IMPORTANT: This should generally be called after confirming a successful cloud backup.
     func applyRetentionPolicy() {
-        guard let cutoff = dataRetentionPolicy.cutoffDate else { return } // allTime: nothing to delete
+        guard let cutoff = dataRetentionPolicy.cutoffDate else { return } // .allTime: nothing to delete
         let toDelete = workouts.filter { $0.date < cutoff }
         for workout in toDelete {
             container.viewContext.delete(workout)
@@ -498,4 +540,6 @@ class DataManager: ObservableObject {
             }
         }
     }
+}
+
 }
