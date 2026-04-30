@@ -95,7 +95,7 @@ struct ExerciseDetailView: View {
                                     Text("lbs").tag("lbs")
                                 }
                                 .pickerStyle(SegmentedPickerStyle())
-                                .onChange(of: editingWeightUnit) { newUnit in
+                                .onChange(of: editingWeightUnit) { _, newUnit in
                                     updateWeightInputString(for: newUnit)
                                 }
                                 HStack {

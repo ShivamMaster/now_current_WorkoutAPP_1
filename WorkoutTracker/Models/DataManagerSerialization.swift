@@ -165,7 +165,7 @@ extension DataManager {
             // Delete all existing data
             for entity in ["Workout", "Exercise", "WorkoutSplit"] {
                 let fr: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: entity)
-                try? context.execute(NSBatchDeleteRequest(fetchRequest: fr))
+                _ = try? context.execute(NSBatchDeleteRequest(fetchRequest: fr))
             }
 
             // Restore splits
@@ -200,7 +200,7 @@ extension DataManager {
     private func restoreWorksouts(_ workouts: [SerializedWorkout], splitName: String?, completion: @escaping (Bool) -> Void) {
         container.performBackgroundTask { context in
             let fr: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: "Workout")
-            try? context.execute(NSBatchDeleteRequest(fetchRequest: fr))
+            _ = try? context.execute(NSBatchDeleteRequest(fetchRequest: fr))
             for sWorkout in workouts { let _ = self.createWorkout(from: sWorkout, in: context) }
             do {
                 try context.save()

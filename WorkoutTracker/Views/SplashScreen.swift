@@ -97,7 +97,7 @@ struct MainTabView: View {
                 }
                 .tag(3)
         }
-        .onChange(of: scenePhase) { newPhase in
+        .onChange(of: scenePhase) { _, newPhase in
             if (newPhase == .inactive || newPhase == .active) && dataManager.hasUnsyncedChanges {
                 showUnsyncedAlert = true
                 UIApplication.shared.isIdleTimerDisabled = true // Prevent sleep if unsynced

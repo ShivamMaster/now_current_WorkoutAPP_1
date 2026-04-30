@@ -93,7 +93,7 @@ struct AddExerciseView: View {
                             Text(type.rawValue).tag(type)
                         }
                     }
-                    .onChange(of: selectedExerciseType) { _ in
+                    .onChange(of: selectedExerciseType) {
                         selectedExercise = ""
                     }
                 }

@@ -78,7 +78,7 @@ class KeychainHelper {
             kSecClass: kSecClassInternetPassword,
             kSecAttrServer: server,
             kSecAttrAccount: account,
-            kSecAttrSynchronizable: kCFBooleanTrue,
+            kSecAttrSynchronizable: kCFBooleanTrue! as Any,
             kSecAttrAccessible: kSecAttrAccessibleAfterFirstUnlock
         ] as CFDictionary
 
@@ -89,7 +89,7 @@ class KeychainHelper {
                 kSecClass: kSecClassInternetPassword,
                 kSecAttrServer: server,
                 kSecAttrAccount: account,
-                kSecAttrSynchronizable: kCFBooleanTrue
+                kSecAttrSynchronizable: kCFBooleanTrue! as Any
             ] as CFDictionary
 
             let attributesToUpdate = [
@@ -119,7 +119,7 @@ class KeychainHelper {
             kSecClass: kSecClassInternetPassword,
             kSecAttrServer: server,
             kSecAttrAccount: account,
-            kSecAttrSynchronizable: kCFBooleanTrue,
+            kSecAttrSynchronizable: kCFBooleanTrue! as Any,
             kSecReturnData: true
         ] as CFDictionary
 

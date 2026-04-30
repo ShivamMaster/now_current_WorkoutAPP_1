@@ -187,7 +187,7 @@ struct SettingsView: View {
                     Text(policy.rawValue).tag(policy)
                 }
             }
-            .onChange(of: selectedRetention) { newValue in
+            .onChange(of: selectedRetention) { _, newValue in
                 if newValue != .allTime {
                     showingRetentionConfirm = true
                 } else {
@@ -203,10 +203,10 @@ struct SettingsView: View {
             Picker("Weight Unit", selection: $weightUnit) {
                 ForEach(weightUnits, id: \.self) { Text($0) }
             }
-            .onChange(of: weightUnit) { _ in dataManager.scheduleHashCheck() }
+            .onChange(of: weightUnit) { _, _ in dataManager.scheduleHashCheck() }
 
             Toggle("Dark Mode", isOn: $themeManager.isDarkMode)
-                .onChange(of: themeManager.isDarkMode) { value in
+                .onChange(of: themeManager.isDarkMode) { _, value in
                     themeManager.themeMode = value ? .dark : .light
                 }
             
