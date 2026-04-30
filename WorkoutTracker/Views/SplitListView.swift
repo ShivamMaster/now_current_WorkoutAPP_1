@@ -5,6 +5,11 @@ struct SplitListView: View {
     @EnvironmentObject private var dataManager: DataManager
     @State private var showingAddSplit = false
     @State private var navigationId = UUID()
+    
+    // For renaming from the list
+    @State private var isRenamingSplit = false
+    @State private var splitToRename: WorkoutSplitModel?
+    @State private var newSplitName = ""
 
     var body: some View {
         NavigationView {
@@ -46,6 +51,23 @@ struct SplitListView: View {
                                     Label("Delete", systemImage: "trash")
                                 }
                             }
+                            .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                                Button {
+                                    dataManager.duplicateSplit(split)
+                                } label: {
+                                    Label("Duplicate", systemImage: "doc.on.doc")
+                                }
+                                .tint(.blue)
+                                
+                                Button {
+                                    splitToRename = split
+                                    newSplitName = split.name
+                                    isRenamingSplit = true
+                                } label: {
+                                    Label("Rename", systemImage: "pencil")
+                                }
+                                .tint(.orange)
+                            }
                         }
                     }
                     .listStyle(InsetGroupedListStyle())
@@ -64,6 +86,15 @@ struct SplitListView: View {
             }
             .sheet(isPresented: $showingAddSplit) {
                 AddSplitView()
+            }
+            .alert("Rename Split", isPresented: $isRenamingSplit) {
+                TextField("Split Name", text: $newSplitName)
+                Button("Save") {
+                    if let split = splitToRename, !newSplitName.isEmpty {
+                        dataManager.renameSplit(split, newName: newSplitName)
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
             }
         }
         .id(navigationId)
@@ -103,8 +134,6 @@ struct SplitDetailView: View {
     @EnvironmentObject private var dataManager: DataManager
     let split: WorkoutSplitModel
     @State private var showingAddDay = false
-    @State private var isRenamingSplit = false
-    @State private var newSplitName: String = ""
 
     var body: some View {
         List {
@@ -159,12 +188,6 @@ struct SplitDetailView: View {
                     Button(action: { showingAddDay = true }) {
                         Label("Add Workout Day", systemImage: "plus")
                     }
-                    Button(action: {
-                        newSplitName = split.name
-                        isRenamingSplit = true
-                    }) {
-                        Label("Rename Split", systemImage: "pencil")
-                    }
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
@@ -172,15 +195,6 @@ struct SplitDetailView: View {
         }
         .sheet(isPresented: $showingAddDay) {
             AddDayView(split: split)
-        }
-        .alert("Rename Split", isPresented: $isRenamingSplit) {
-            TextField("Split Name", text: $newSplitName)
-            Button("Save") {
-                if !newSplitName.isEmpty {
-                    dataManager.renameSplit(split, newName: newSplitName)
-                }
-            }
-            Button("Cancel", role: .cancel) {}
         }
     }
 }
@@ -222,6 +236,9 @@ struct AddSplitView: View {
     @EnvironmentObject private var dataManager: DataManager
     @Environment(\.presentationMode) var presentationMode
     @State private var name = ""
+    @State private var showingDiscardAlert = false
+
+    private var hasChanges: Bool { !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 
     var body: some View {
         NavigationView {
@@ -241,8 +258,21 @@ struct AddSplitView: View {
             }
             .navigationTitle("New Split")
             .navigationBarItems(trailing: Button("Cancel") {
-                presentationMode.wrappedValue.dismiss()
+                if hasChanges {
+                    showingDiscardAlert = true
+                } else {
+                    presentationMode.wrappedValue.dismiss()
+                }
             })
+            .interactiveDismissDisabled(hasChanges)
+            .alert("Discard Changes?", isPresented: $showingDiscardAlert) {
+                Button("Discard", role: .destructive) {
+                    presentationMode.wrappedValue.dismiss()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Are you sure you want to discard this split?")
+            }
         }
     }
 }
@@ -260,6 +290,14 @@ struct AddDayView: View {
     @State private var duration = ""
     @State private var notes = ""
     @State private var date = Date()
+    @State private var showingDiscardAlert = false
+
+    private var hasChanges: Bool {
+        !dayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+        !workoutName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+        !duration.isEmpty ||
+        !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 
     enum DayField { case dayName, workoutName, duration, notes }
 
@@ -306,8 +344,21 @@ struct AddDayView: View {
             }
             .navigationTitle("Add Workout Day")
             .navigationBarItems(trailing: Button("Cancel") {
-                presentationMode.wrappedValue.dismiss()
+                if hasChanges {
+                    showingDiscardAlert = true
+                } else {
+                    presentationMode.wrappedValue.dismiss()
+                }
             })
+            .interactiveDismissDisabled(hasChanges)
+            .alert("Discard Changes?", isPresented: $showingDiscardAlert) {
+                Button("Discard", role: .destructive) {
+                    presentationMode.wrappedValue.dismiss()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Are you sure you want to discard this workout day?")
+            }
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()

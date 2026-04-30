@@ -95,19 +95,14 @@ struct MainTabView: View {
                 }
                 .tag(3)
         }
-        .accentColor(.blue)
         .onChange(of: scenePhase) { newPhase in
-            if newPhase == .inactive && dataManager.hasUnsyncedChanges {
+            if (newPhase == .inactive || newPhase == .active) && dataManager.hasUnsyncedChanges {
                 showUnsyncedAlert = true
             }
         }
-        .alert("Unsynced Data", isPresented: $showUnsyncedAlert) {
-            Button("Yes, leave") { }
-            Button("No, take me to Settings") {
-                selectedTab = 3
-            }
-        } message: {
-            Text("Are you sure you want to leave? You still have unsynced data.")
+        .fullScreenCover(isPresented: $showUnsyncedAlert) {
+            SyncWarningView(selectedTab: $selectedTab)
+                .environmentObject(dataManager)
         }
     }
     
@@ -142,6 +137,64 @@ struct MainTabView: View {
         case 2: dataManager.popToRootCalendar += 1
         case 3: dataManager.popToRootSettings += 1
         default: break
+        }
+    }
+}
+
+// MARK: - Blocking Sync Warning View
+struct SyncWarningView: View {
+    @EnvironmentObject private var dataManager: DataManager
+    @Environment(\.dismiss) var dismiss
+    @Binding var selectedTab: Int
+
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 25) {
+                Spacer()
+                
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 80))
+                    .foregroundColor(.orange)
+                    .shadow(radius: 5)
+
+                Text("Unsynced Changes")
+                    .font(.title.bold())
+
+                Text("You have workout data that hasn't been backed up to the cloud yet. We recommend syncing before you leave to ensure your data is safe.")
+                    .font(.body)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 30)
+                    .foregroundColor(.secondary)
+
+                Spacer()
+
+                VStack(spacing: 15) {
+                    Button(action: {
+                        selectedTab = 3 // Settings
+                        dismiss()
+                    }) {
+                        Text("Go to Settings & Sync")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.blue)
+                            .cornerRadius(15)
+                    }
+
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Text("I'll do it later")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(.horizontal, 40)
+                .padding(.bottom, 40)
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .interactiveDismissDisabled() // Task 11: Actually prevent leaving until answered
         }
     }
 }

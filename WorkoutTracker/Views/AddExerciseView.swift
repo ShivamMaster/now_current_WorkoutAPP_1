@@ -59,6 +59,20 @@ struct AddExerciseView: View {
     @State private var calories = ""
     @State private var holdTime = ""
     @State private var notes = ""
+    @State private var showingDiscardAlert = false
+
+    private var hasChanges: Bool {
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+        !sets.isEmpty ||
+        !reps.isEmpty ||
+        !weight.isEmpty ||
+        !duration.isEmpty ||
+        !distance.isEmpty ||
+        !calories.isEmpty ||
+        !holdTime.isEmpty ||
+        !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+        !selectedExercise.isEmpty
+    }
 
     @State private var showingExerciseList = false
 
@@ -198,8 +212,21 @@ struct AddExerciseView: View {
             }
             .navigationTitle("Add Exercise")
             .navigationBarItems(trailing: Button("Cancel") {
-                presentationMode.wrappedValue.dismiss()
+                if hasChanges {
+                    showingDiscardAlert = true
+                } else {
+                    presentationMode.wrappedValue.dismiss()
+                }
             })
+            .interactiveDismissDisabled(hasChanges)
+            .alert("Discard Changes?", isPresented: $showingDiscardAlert) {
+                Button("Discard", role: .destructive) {
+                    presentationMode.wrappedValue.dismiss()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Are you sure you want to discard this exercise?")
+            }
             // Feature 2: Done button to dismiss number pad / keyboard
             .toolbar {
                 ToolbarItemGroup(placement: .keyboard) {

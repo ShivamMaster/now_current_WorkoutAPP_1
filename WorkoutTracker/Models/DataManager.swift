@@ -195,6 +195,43 @@ class DataManager: ObservableObject {
         save()
     }
 
+    func duplicateSplit(_ split: WorkoutSplitModel) {
+        let context = container.viewContext
+        let newSplit = WorkoutSplitModel(context: context)
+        newSplit.id = UUID()
+        newSplit.name = split.name + " (Copy)"
+        newSplit.createdAt = Date()
+        
+        for workout in split.workoutArray {
+            let newWorkout = WorkoutModel(context: context)
+            newWorkout.id = UUID()
+            newWorkout.name = workout.name
+            newWorkout.date = Date()
+            newWorkout.duration = workout.duration
+            newWorkout.notes = workout.notes
+            newWorkout.dayName = workout.dayName
+            newWorkout.split = newSplit
+            
+            for exercise in workout.exerciseArray {
+                let newEx = ExerciseModel(context: context)
+                newEx.id = UUID()
+                newEx.name = exercise.name
+                newEx.exerciseType = exercise.exerciseType
+                newEx.sets = exercise.sets
+                newEx.reps = exercise.reps
+                newEx.weight = exercise.weight
+                newEx.duration = exercise.duration
+                newEx.distance = exercise.distance
+                newEx.calories = exercise.calories
+                newEx.holdTime = exercise.holdTime
+                newEx.notes = exercise.notes
+                newEx.order = exercise.order
+                newEx.workout = newWorkout
+            }
+        }
+        save()
+    }
+
     // MARK: - Workout CRUD (now aware of splits)
 
     func addWorkout(name: String, date: Date, duration: Int16, notes: String? = nil, dayName: String? = nil, split: WorkoutSplitModel? = nil) {
