@@ -184,12 +184,8 @@ struct SplitDetailView: View {
         .navigationTitle(split.name)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Menu {
-                    Button(action: { showingAddDay = true }) {
-                        Label("Add Workout Day", systemImage: "plus")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
+                Button(action: { showingAddDay = true }) {
+                    Image(systemName: "plus")
                 }
             }
         }

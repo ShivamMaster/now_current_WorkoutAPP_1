@@ -1,5 +1,6 @@
 import SwiftUI
 import Lottie
+import UserNotifications
 
 struct SplashScreen: View {
     @State private var isActive = false
@@ -36,6 +37,7 @@ struct SplashScreen: View {
                 }
             }
             .onAppear {
+                UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                     withAnimation {
                         self.isActive = true
@@ -98,12 +100,26 @@ struct MainTabView: View {
         .onChange(of: scenePhase) { newPhase in
             if (newPhase == .inactive || newPhase == .active) && dataManager.hasUnsyncedChanges {
                 showUnsyncedAlert = true
+                UIApplication.shared.isIdleTimerDisabled = true // Prevent sleep if unsynced
+                
+                if newPhase == .inactive {
+                    sendUnsyncedNotification()
+                }
+            } else if newPhase == .active {
+                UIApplication.shared.isIdleTimerDisabled = false
+                UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
+            if dataManager.hasUnsyncedChanges {
+                showUnsyncedAlert = true
             }
         }
         .fullScreenCover(isPresented: $showUnsyncedAlert) {
             SyncWarningView(selectedTab: $selectedTab)
                 .environmentObject(dataManager)
         }
+        .defersSystemGestures(on: dataManager.hasUnsyncedChanges ? .bottom : [])
     }
     
     private func handleRepeatTap() {
@@ -138,6 +154,18 @@ struct MainTabView: View {
         case 3: dataManager.popToRootSettings += 1
         default: break
         }
+    }
+
+    private func sendUnsyncedNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = "Unsynced Data!"
+        content.body = "You have unsaved changes. Please return to the app to sync your data."
+        content.sound = .defaultCritical
+        
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+        
+        UNUserNotificationCenter.current().add(request)
     }
 }
 
