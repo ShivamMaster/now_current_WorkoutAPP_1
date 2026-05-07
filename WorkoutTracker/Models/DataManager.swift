@@ -120,12 +120,23 @@ class DataManager: ObservableObject {
     init() {
         container = NSPersistentContainer(name: "WorkoutTracker")
 
-        // Use App Group container for sharing data between the main app and widgets.
-        guard let groupContainerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.HiraGoel.WorkoutTracker") else {
-            fatalError("Failed to get App Group container URL.")
+        // Attempt to use App Group container for sharing data between the main app and widgets.
+        let appGroupId = "group.com.HiraGoel.WorkoutTracker"
+        var storeURL: URL
+        
+        if let groupContainerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupId) {
+            storeURL = groupContainerURL.appendingPathComponent("WorkoutTracker.sqlite")
+        } else {
+            // Fallback to local application support directory if App Group is unavailable (common in sideloaded builds)
+            let appSupportURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            
+            // Ensure the directory exists
+            try? FileManager.default.createDirectory(at: appSupportURL, withIntermediateDirectories: true)
+            
+            storeURL = appSupportURL.appendingPathComponent("WorkoutTracker.sqlite")
+            print("DataManager: App Group unavailable. Falling back to local storage.")
         }
 
-        let storeURL = groupContainerURL.appendingPathComponent("WorkoutTracker.sqlite")
         let description = NSPersistentStoreDescription(url: storeURL)
         
         // Enable lightweight migration for automatic schema updates.
@@ -135,10 +146,11 @@ class DataManager: ObservableObject {
 
         container.loadPersistentStores { description, error in
             if let error = error {
-                print("Error loading Core Data: \(error.localizedDescription)")
-                fatalError("Unresolved error \(error), \(error.localizedDescription)")
+                print("DataManager: Error loading Core Data: \(error.localizedDescription)")
+                // Note: In a production app, we might handle this more gracefully, 
+                // but we avoid fatalError here to prevent immediate crashes.
             } else {
-                print("Core Data model loaded successfully from App Group: \(storeURL.path)")
+                print("DataManager: Core Data model loaded successfully from: \(storeURL.path)")
             }
         }
         
@@ -542,4 +554,3 @@ class DataManager: ObservableObject {
     }
 }
 
-}
