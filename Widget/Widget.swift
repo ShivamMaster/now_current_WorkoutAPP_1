@@ -54,7 +54,7 @@ struct Provider: TimelineProvider {
         let request: NSFetchRequest<WorkoutModel> = NSFetchRequest<WorkoutModel>(entityName: "Workout")
 
         // Create date range for the beginning and end of the month
-        var components = calendar.dateComponents([.year, .month], from: month)
+        let components = calendar.dateComponents([.year, .month], from: month)
         guard let startOfMonth = calendar.date(from: components) else {
             print("WIDGET DEBUG: Could not calculate start of month.")
             return []
@@ -453,13 +453,7 @@ struct MotivationalQuoteWidget: Widget {
 
 // MARK: - Widget Bundle
 
-// REMOVE any @main struct or WidgetBundle from this file.
-struct WorkoutWidgetBundle: WidgetBundle {
-    var body: some Widget {
-        WorkoutCalendarWidget()
-        MotivationalQuoteWidget()
-    }
-}
+// MARK: - Widget Bundle - Handled in WidgetBundle.swift
 
 // Restore your Preview if you had one
 #Preview(as: .systemSmall) {

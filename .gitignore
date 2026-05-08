@@ -1,0 +1,23 @@
+# Swift/Xcode
+build/
+DerivedData/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcuserstate
+*.ipa
+*.app
+*.dSYM.zip
+*.dSYM
+
+# Ruby/Fastlane
+vendor/bundle/
+vendor/
+.bundle/
+Gemfile.lock (if you want to ignore it, but usually you keep it. I'll keep it for now but ignore vendor)
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# System
+.DS_Store
