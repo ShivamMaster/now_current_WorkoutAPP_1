@@ -18,7 +18,7 @@ In a world of bloated fitness apps filled with subscriptions, ads, and forced so
 - **Zero Friction**: Start logging your workout in seconds with a streamlined UI.
 - **Visual Clarity**: Beautifully integrated charts and a custom calendar view to visualize your journey.
 - **Robust Sync**: Securely backup your data to the cloud and restore it across devices seamlessly.
-- **Apple Integrated**: Uses Apple Keychain to securely store your cloud credentials, just like the system Passwords app.
+- **iCloud Integrated**: Uses Apple Keychain with iCloud synchronization to securely store your cloud credentials. This ensures your app automatically remembers your settings even if you delete and reinstall the app.
 
 ---
 
@@ -91,7 +91,7 @@ This app uses a unique "Dynamic Configuration" approach. Instead of hardcoding a
    - **Google App ID**
    - **GCM Sender ID**
 5. Tap **Save & Connect**.
-6. (Optional) Choose **Save to Keychain** to securely store these credentials in your Apple Passwords app for future use.
+6. (Optional) Choose **Save to Keychain**: This securely stores your credentials in your encrypted iCloud Keychain. Even if you delete the app or get a new iPhone, the app will automatically detect your credentials on first launch.
 
 ### 3. Backup & Restore
 Once connected, simply enter a **Unique User ID** (can be anything you choose) to backup or restore your data to your private Firestore instance.

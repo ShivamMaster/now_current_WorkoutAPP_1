@@ -3,6 +3,7 @@
 /// It integrates with the Keychain to ensure credentials persist across app installations.
 
 import Foundation
+import Security
 import FirebaseCore
 
 class FirebaseConfigManager: ObservableObject {
@@ -167,4 +168,5 @@ class KeychainHelper {
         }
         return nil
     }
+
 }
