@@ -72,172 +72,14 @@ struct ExerciseDetailView: View {
         Form {
             Section(header: Text("Exercise Details")) {
                 if isEditing {
-                    TextField("Name", text: $name)
-                        .focused($focusedField, equals: .name)
-
-                    Picker("Type", selection: $selectedExerciseType) {
-                        ForEach(ExerciseType.allCases) { type in
-                            Text(type.rawValue).tag(type)
-                        }
-                    }
-
-                    ForEach(selectedExerciseType.measurementFields, id: \.self) { field in
-                        switch field {
-                        case "Sets":
-                            HStack {
-                                Text("Sets")
-                                Spacer()
-                                TextField("Sets", text: $sets)
-                                    .keyboardType(.numberPad)
-                                    .multilineTextAlignment(.trailing)
-                                    .focused($focusedField, equals: .sets)
-                            }
-                        case "Reps":
-                            HStack {
-                                Text("Reps")
-                                Spacer()
-                                TextField("Reps", text: $reps)
-                                    .keyboardType(.numberPad)
-                                    .multilineTextAlignment(.trailing)
-                                    .focused($focusedField, equals: .reps)
-                            }
-                        case "Weight (kg)":
-                            VStack {
-                                Picker("Unit", selection: $editingWeightUnit) {
-                                    Text("kg").tag("kg")
-                                    Text("lbs").tag("lbs")
-                                }
-                                .pickerStyle(SegmentedPickerStyle())
-                                .onChange(of: editingWeightUnit) { _, newUnit in
-                                    updateWeightInputString(for: newUnit)
-                                }
-                                HStack {
-                                    Text("Weight (\(editingWeightUnit))")
-                                    Spacer()
-                                    TextField("Weight", text: $weightInputString)
-                                        .keyboardType(.decimalPad)
-                                        .multilineTextAlignment(.trailing)
-                                        .focused($focusedField, equals: .weight)
-                                }
-                            }
-                        case "Duration (min)":
-                            VStack(alignment: .leading, spacing: 10) {
-                                HStack {
-                                    Text("Duration (min)")
-                                    Spacer()
-                                    TextField("Minutes", text: $duration)
-                                        .keyboardType(.numberPad)
-                                        .multilineTextAlignment(.trailing)
-                                        .focused($focusedField, equals: .duration)
-                                }
-                                HStack {
-                                    Text("Seconds (Optional)")
-                                    Spacer()
-                                    TextField("Seconds", text: $durationSeconds)
-                                        .keyboardType(.numberPad)
-                                        .multilineTextAlignment(.trailing)
-                                        .focused($focusedField, equals: .durationSeconds)
-                                }
-                            }
-                        case "Distance (km)":
-                            HStack {
-                                Text("Distance (km)")
-                                Spacer()
-                                TextField("Kilometers", text: $distance)
-                                    .keyboardType(.decimalPad)
-                                    .multilineTextAlignment(.trailing)
-                                    .focused($focusedField, equals: .distance)
-                            }
-                        case "Calories":
-                            HStack {
-                                Text("Calories")
-                                Spacer()
-                                TextField("Calories", text: $calories)
-                                    .keyboardType(.numberPad)
-                                    .multilineTextAlignment(.trailing)
-                                    .focused($focusedField, equals: .calories)
-                            }
-                        case "Hold Time (sec)":
-                            HStack {
-                                Text("Hold Time (sec)")
-                                Spacer()
-                                TextField("Seconds", text: $holdTime)
-                                    .keyboardType(.numberPad)
-                                    .multilineTextAlignment(.trailing)
-                                    .focused($focusedField, equals: .holdTime)
-                            }
-                        default:
-                            EmptyView()
-                        }
-                    }
-                    TextField("Notes", text: $notes, axis: .vertical)
-                        .lineLimit(5)
-                        .focused($focusedField, equals: .notes)
-
+                    editFields
                 } else {
-                    HStack {
-                        Text("Name")
-                        Spacer()
-                        Text(exercise.name).foregroundColor(.secondary)
-                    }
-                    HStack {
-                        Text("Type")
-                        Spacer()
-                        Text(exercise.exerciseTypeEnum.rawValue).foregroundColor(.secondary)
-                    }
-                    ForEach(exercise.exerciseTypeEnum.measurementFields, id: \.self) { field in
-                        switch field {
-                        case "Sets":
-                            HStack { Text("Sets"); Spacer(); Text("\(exercise.sets)").foregroundColor(.secondary) }
-                        case "Reps":
-                            HStack { Text("Reps"); Spacer(); Text("\(exercise.reps)").foregroundColor(.secondary) }
-                        case "Weight (kg)":
-                            HStack {
-                                Text("Weight")
-                                Spacer()
-                                Text(displayWeightString(weightInKg: exercise.weight, unit: displayWeightUnit))
-                                    .foregroundColor(.secondary)
-                            }
-                        case "Duration (min)":
-                            HStack {
-                                Text("Duration")
-                                Spacer()
-                                var durationStr = "\(exercise.duration) min"
-                                if exercise.durationSeconds > 0 {
-                                    durationStr += " \(exercise.durationSeconds) sec"
-                                }
-                                Text(durationStr).foregroundColor(.secondary)
-                            }
-                        case "Distance (km)":
-                            HStack { Text("Distance"); Spacer(); Text("\(String(format: "%.1f", exercise.distance)) km").foregroundColor(.secondary) }
-                        case "Calories":
-                            HStack { Text("Calories"); Spacer(); Text("\(exercise.calories)").foregroundColor(.secondary) }
-                        case "Hold Time (sec)":
-                            HStack { Text("Hold Time"); Spacer(); Text("\(exercise.holdTime) sec").foregroundColor(.secondary) }
-                        default: EmptyView()
-                        }
-                    }
-                    if let notes = exercise.notes, !notes.isEmpty {
-                        VStack(alignment: .leading, spacing: 5) {
-                            Text("Notes")
-                            Text(notes).foregroundColor(.secondary)
-                        }
-                    }
+                    displayFields
                 }
             }
 
             if isEditing {
-                Section {
-                    Button("Save Changes") { saveChanges() }
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .foregroundColor(.blue)
-                    Button("Cancel") {
-                        isEditing = false
-                        resetFields()
-                    }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .foregroundColor(.red)
-                }
+                editButtons
             }
         }
         .navigationTitle(isEditing ? "Edit Exercise" : exercise.name)
@@ -347,5 +189,188 @@ struct ExerciseDetailView: View {
             notes: notes.isEmpty ? nil : notes
         )
         isEditing = false
+    }
+    // MARK: - Subviews
+
+    @ViewBuilder
+    private var editFields: some View {
+        TextField("Name", text: $name)
+            .focused($focusedField, equals: .name)
+
+        Picker("Type", selection: $selectedExerciseType) {
+            ForEach(ExerciseType.allCases) { type in
+                Text(type.rawValue).tag(type)
+            }
+        }
+
+        ForEach(selectedExerciseType.measurementFields, id: \.self) { field in
+            Group {
+                switch field {
+                case "Sets":
+                    HStack {
+                        Text("Sets")
+                        Spacer()
+                        TextField("Sets", text: $sets)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .focused($focusedField, equals: .sets)
+                    }
+                case "Reps":
+                    HStack {
+                        Text("Reps")
+                        Spacer()
+                        TextField("Reps", text: $reps)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .focused($focusedField, equals: .reps)
+                    }
+                case "Weight (kg)":
+                    VStack {
+                        Picker("Unit", selection: $editingWeightUnit) {
+                            Text("kg").tag("kg")
+                            Text("lbs").tag("lbs")
+                        }
+                        .pickerStyle(SegmentedPickerStyle())
+                        .onChange(of: editingWeightUnit) { _, newUnit in
+                            updateWeightInputString(for: newUnit)
+                        }
+                        HStack {
+                            Text("Weight (\(editingWeightUnit))")
+                            Spacer()
+                            TextField("Weight", text: $weightInputString)
+                                .keyboardType(.decimalPad)
+                                .multilineTextAlignment(.trailing)
+                                .focused($focusedField, equals: .weight)
+                        }
+                    }
+                case "Duration (min)":
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            Text("Duration (min)")
+                            Spacer()
+                            TextField("Minutes", text: $duration)
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.trailing)
+                                .focused($focusedField, equals: .duration)
+                        }
+                        HStack {
+                            Text("Seconds (Optional)")
+                            Spacer()
+                            TextField("Seconds", text: $durationSeconds)
+                                .keyboardType(.numberPad)
+                                .multilineTextAlignment(.trailing)
+                                .focused($focusedField, equals: .durationSeconds)
+                        }
+                    }
+                case "Distance (km)":
+                    HStack {
+                        Text("Distance (km)")
+                        Spacer()
+                        TextField("Distance", text: $distance)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .focused($focusedField, equals: .distance)
+                    }
+                case "Calories":
+                    HStack {
+                        Text("Calories")
+                        Spacer()
+                        TextField("Calories", text: $calories)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .focused($focusedField, equals: .calories)
+                    }
+                case "Hold Time (sec)":
+                    HStack {
+                        Text("Hold Time (sec)")
+                        Spacer()
+                        TextField("Seconds", text: $holdTime)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .focused($focusedField, equals: .holdTime)
+                    }
+                default:
+                    EmptyView()
+                }
+            }
+        }
+        TextField("Notes", text: $notes, axis: .vertical)
+            .lineLimit(5)
+            .focused($focusedField, equals: .notes)
+    }
+
+    @ViewBuilder
+    private var displayFields: some View {
+        HStack {
+            Text("Name")
+            Spacer()
+            Text(exercise.name).foregroundColor(.secondary)
+        }
+        HStack {
+            Text("Type")
+            Spacer()
+            Text(exercise.exerciseTypeEnum.rawValue).foregroundColor(.secondary)
+        }
+        ForEach(exercise.exerciseTypeEnum.measurementFields, id: \.self) { field in
+            Group {
+                switch field {
+                case "Sets":
+                    HStack { Text("Sets"); Spacer(); Text("\(exercise.sets)").foregroundColor(.secondary) }
+                case "Reps":
+                    HStack { Text("Reps"); Spacer(); Text("\(exercise.reps)").foregroundColor(.secondary) }
+                case "Weight (kg)":
+                    HStack {
+                        Text("Weight")
+                        Spacer()
+                        Text(displayWeightString(weightInKg: exercise.weight, unit: displayWeightUnit))
+                            .foregroundColor(.secondary)
+                    }
+                case "Duration (min)":
+                    HStack {
+                        Text("Duration")
+                        Spacer()
+                        let durationStr = buildDurationString()
+                        Text(durationStr).foregroundColor(.secondary)
+                    }
+                case "Distance (km)":
+                    HStack { Text("Distance"); Spacer(); Text("\(String(format: "%.1f", exercise.distance)) km").foregroundColor(.secondary) }
+                case "Calories":
+                    HStack { Text("Calories"); Spacer(); Text("\(exercise.calories) kcal").foregroundColor(.secondary) }
+                case "Hold Time (sec)":
+                    HStack { Text("Hold Time"); Spacer(); Text("\(exercise.holdTime) sec").foregroundColor(.secondary) }
+                default:
+                    EmptyView()
+                }
+            }
+        }
+        if let notes = exercise.notes, !notes.isEmpty {
+            VStack(alignment: .leading, spacing: 5) {
+                Text("Notes")
+                Text(notes).foregroundColor(.secondary)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var editButtons: some View {
+        Section {
+            Button("Save Changes") { saveChanges() }
+                .frame(maxWidth: .infinity, alignment: .center)
+                .foregroundColor(.blue)
+            Button("Cancel") {
+                isEditing = false
+                resetFields()
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+            .foregroundColor(.red)
+        }
+    }
+
+    private func buildDurationString() -> String {
+        var durationStr = "\(exercise.duration) min"
+        if exercise.durationSeconds > 0 {
+            durationStr += " \(exercise.durationSeconds) sec"
+        }
+        return durationStr
     }
 }

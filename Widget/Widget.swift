@@ -301,7 +301,7 @@ struct WorkoutCalendarWidget: Widget {
 #Preview(as: .systemMedium) {
     WorkoutCalendarWidget()
 } timeline: {
-    SimpleEntry(date: Date(), currentMonthDate: Date(), workoutDays: [1, 5, 15, 22])
+    SimpleEntry(date: Date(), currentMonthDate: Date(), workoutDays: [1, 5, 15, 22], isError: false)
 }
 
 // Make sure your WorkoutModel class is available to the Widget target
@@ -465,7 +465,7 @@ struct WorkoutWidgetBundle: WidgetBundle {
 #Preview(as: .systemSmall) {
     WorkoutCalendarWidget()
 } timeline: {
-    SimpleEntry(date: Date(), currentMonthDate: Date(), workoutDays: [1, 5, 15, 22])
+    SimpleEntry(date: Date(), currentMonthDate: Date(), workoutDays: [1, 5, 15, 22], isError: false)
 }
 
 // Make sure your WorkoutModel class is available to the Widget target

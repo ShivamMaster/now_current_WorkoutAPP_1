@@ -76,46 +76,49 @@ struct MainTabView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             // MARK: - Persistent Tab Content
-            // Using ZStack with opacity ensures views are kept in memory and preserve their state (scroll position, text inputs, sheets)
-            Group {
-                WorkoutListView()
-                    .opacity(selectedTab == 0 ? 1 : 0)
-                    .zIndex(selectedTab == 0 ? 1 : 0)
-                
-                ProgressView()
-                    .opacity(selectedTab == 1 ? 1 : 0)
-                    .zIndex(selectedTab == 1 ? 1 : 0)
-                
-                CalendarView()
-                    .opacity(selectedTab == 2 ? 1 : 0)
-                    .zIndex(selectedTab == 2 ? 1 : 0)
-                
-                SettingsView()
-                    .opacity(selectedTab == 3 ? 1 : 0)
-                    .zIndex(selectedTab == 3 ? 1 : 0)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            
-            // MARK: - Custom Tab Bar
-            VStack(spacing: 0) {
-                Spacer()
-                Divider()
-                HStack {
-                    tabButton(index: 0, label: "Workouts", icon: "list.bullet")
-                    Spacer()
-                    tabButton(index: 1, label: "Progress", icon: "chart.line.uptrend.xyaxis")
-                    Spacer()
-                    tabButton(index: 2, label: "Calendar", icon: "calendar")
-                    Spacer()
-                    tabButton(index: 3, label: "Settings", icon: "gear")
+            GeometryReader { geometry in
+                ZStack(alignment: .bottom) {
+                    Group {
+                        WorkoutListView()
+                            .opacity(selectedTab == 0 ? 1 : 0)
+                            .zIndex(selectedTab == 0 ? 1 : 0)
+                        
+                        ProgressView()
+                            .opacity(selectedTab == 1 ? 1 : 0)
+                            .zIndex(selectedTab == 1 ? 1 : 0)
+                        
+                        CalendarView()
+                            .opacity(selectedTab == 2 ? 1 : 0)
+                            .zIndex(selectedTab == 2 ? 1 : 0)
+                        
+                        SettingsView()
+                            .opacity(selectedTab == 3 ? 1 : 0)
+                            .zIndex(selectedTab == 3 ? 1 : 0)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(.bottom, geometry.safeAreaInsets.bottom + 60) // Padding for tab bar content area
+                    
+                    // MARK: - Custom Tab Bar
+                    VStack(spacing: 0) {
+                        Divider()
+                        HStack {
+                            tabButton(index: 0, label: "Workouts", icon: "list.bullet")
+                            Spacer()
+                            tabButton(index: 1, label: "Progress", icon: "chart.line.uptrend.xyaxis")
+                            Spacer()
+                            tabButton(index: 2, label: "Calendar", icon: "calendar")
+                            Spacer()
+                            tabButton(index: 3, label: "Settings", icon: "gear")
+                        }
+                        .padding(.horizontal, 25)
+                        .padding(.top, 10)
+                        .padding(.bottom, geometry.safeAreaInsets.bottom > 0 ? geometry.safeAreaInsets.bottom : 15)
+                        .background(.ultraThinMaterial)
+                    }
                 }
-                .padding(.horizontal, 25)
-                .padding(.top, 10)
-                .padding(.bottom, 34) // Standard iPhone safe area bottom
-                .background(.ultraThinMaterial)
+                .ignoresSafeArea(.container, edges: .bottom)
             }
         }
-        .ignoresSafeArea(.all, edges: .bottom)
         .onChange(of: scenePhase) { _, newPhase in
             // Handle app lifecycle events for data safety.
             if (newPhase == .inactive || newPhase == .active) && dataManager.hasUnsyncedChanges {
