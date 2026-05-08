@@ -43,7 +43,7 @@ struct CalendarView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 0) {
                 navigationHeader
                 Divider()

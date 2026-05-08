@@ -75,50 +75,57 @@ struct MainTabView: View {
     
     var body: some View {
         ZStack(alignment: .bottom) {
-            // MARK: - Persistent Tab Content
-            GeometryReader { geometry in
-                ZStack(alignment: .bottom) {
-                    Group {
-                        WorkoutListView()
-                            .opacity(selectedTab == 0 ? 1 : 0)
-                            .zIndex(selectedTab == 0 ? 1 : 0)
-                        
-                        ProgressView()
-                            .opacity(selectedTab == 1 ? 1 : 0)
-                            .zIndex(selectedTab == 1 ? 1 : 0)
-                        
-                        CalendarView()
-                            .opacity(selectedTab == 2 ? 1 : 0)
-                            .zIndex(selectedTab == 2 ? 1 : 0)
-                        
-                        SettingsView()
-                            .opacity(selectedTab == 3 ? 1 : 0)
-                            .zIndex(selectedTab == 3 ? 1 : 0)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(.bottom, geometry.safeAreaInsets.bottom + 60) // Padding for tab bar content area
-                    
-                    // MARK: - Custom Tab Bar
-                    VStack(spacing: 0) {
-                        Divider()
-                        HStack {
-                            tabButton(index: 0, label: "Workouts", icon: "list.bullet")
-                            Spacer()
-                            tabButton(index: 1, label: "Progress", icon: "chart.line.uptrend.xyaxis")
-                            Spacer()
-                            tabButton(index: 2, label: "Calendar", icon: "calendar")
-                            Spacer()
-                            tabButton(index: 3, label: "Settings", icon: "gear")
-                        }
-                        .padding(.horizontal, 25)
-                        .padding(.top, 10)
-                        .padding(.bottom, geometry.safeAreaInsets.bottom > 0 ? geometry.safeAreaInsets.bottom : 15)
-                        .background(.ultraThinMaterial)
+            TabView(selection: $selectedTab) {
+                WorkoutListView()
+                    .tag(0)
+                    .toolbar(.hidden, for: .tabBar)
+                
+                ProgressView()
+                    .tag(1)
+                    .toolbar(.hidden, for: .tabBar)
+                
+                CalendarView()
+                    .tag(2)
+                    .toolbar(.hidden, for: .tabBar)
+                
+                SettingsView()
+                    .tag(3)
+                    .toolbar(.hidden, for: .tabBar)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            
+            // MARK: - Custom Tab Bar
+            VStack {
+                HStack(spacing: 0) {
+                    ForEach(0..<4) { index in
+                        tabButton(
+                            index: index,
+                            label: tabLabel(for: index),
+                            icon: tabIcon(for: index)
+                        )
+                        if index < 3 { Spacer() }
                     }
                 }
-                .ignoresSafeArea(.container, edges: .bottom)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .background(
+                    ZStack {
+                        Capsule()
+                            .fill(.ultraThinMaterial)
+                        Capsule()
+                            .fill(Color.black.opacity(0.4))
+                    }
+                    .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(.white.opacity(0.1), lineWidth: 0.5)
+                )
+                .padding(.horizontal, 25)
+                .padding(.bottom, 34) // Standard iPhone safe area fallback
             }
         }
+        .ignoresSafeArea(.container, edges: .bottom)
         .onChange(of: scenePhase) { _, newPhase in
             // Handle app lifecycle events for data safety.
             if (newPhase == .inactive || newPhase == .active) && dataManager.hasUnsyncedChanges {
@@ -152,23 +159,59 @@ struct MainTabView: View {
     
     private func tabButton(index: Int, label: String, icon: String) -> some View {
         Button(action: {
-            if selectedTab == index {
-                handleRepeatTap()
-            } else {
-                selectedTab = index
-                tapCount = 0
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                if selectedTab == index {
+                    handleRepeatTap()
+                } else {
+                    selectedTab = index
+                    tapCount = 0
+                }
             }
         }) {
             VStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.system(size: 22))
+                    .font(.system(size: 18, weight: selectedTab == index ? .bold : .medium))
+                    .scaleEffect(selectedTab == index ? 1.1 : 1.0)
+                
                 Text(label)
-                    .font(.system(size: 10, weight: .medium))
+                    .font(.system(size: 10, weight: selectedTab == index ? .bold : .medium))
+                    .opacity(selectedTab == index ? 1 : 0.7)
             }
-            .foregroundColor(selectedTab == index ? .blue : .gray)
-            .frame(minWidth: 60)
+            .foregroundColor(selectedTab == index ? .blue : .white.opacity(0.7))
+            .frame(maxWidth: .infinity)
+            .frame(height: 44)
+            .background(
+                ZStack {
+                    if selectedTab == index {
+                        Capsule()
+                            .fill(Color(white: 0.05)) // Extremely dark pill
+                            .matchedGeometryEffect(id: "tabIndicator", in: tabNamespace)
+                            .shadow(color: .white.opacity(0.05), radius: 1, x: 0, y: 1)
+                    }
+                }
+            )
         }
     }
+    
+    private func tabLabel(for index: Int) -> String {
+        switch index {
+        case 0: return "Workouts"
+        case 1: return "Progress"
+        case 2: return "Calendar"
+        default: return "Settings"
+        }
+    }
+    
+    private func tabIcon(for index: Int) -> String {
+        switch index {
+        case 0: return "list.bullet"
+        case 1: return "chart.line.uptrend.xyaxis"
+        case 2: return "calendar"
+        default: return "gear"
+        }
+    }
+    
+    @Namespace private var tabNamespace
     
     // MARK: - Logic
     
@@ -228,7 +271,7 @@ struct SyncWarningView: View {
     @Binding var selectedTab: Int
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 25) {
                 Spacer()
                 

@@ -40,7 +40,7 @@ struct ProgressView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 if exerciseNames.isEmpty {
                     ContentUnavailableView(

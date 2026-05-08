@@ -41,7 +41,7 @@ struct SettingsView: View {
     let weightUnits = ["kg", "lbs"]
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List {
                 cloudBackupSection
                 localStorageSection

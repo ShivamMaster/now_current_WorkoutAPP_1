@@ -15,7 +15,7 @@ struct AddWorkoutView: View {
     enum WorkoutField { case name, duration, notes }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section(header: Text("Workout Details")) {
                     TextField("Workout Name", text: $name)

@@ -17,7 +17,7 @@ struct SplitListView: View {
     @State private var newSplitName = ""
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Group {
                 if dataManager.splits.isEmpty {
                     VStack(spacing: 20) {
