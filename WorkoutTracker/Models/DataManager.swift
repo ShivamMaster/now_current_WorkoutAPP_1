@@ -35,6 +35,7 @@ struct SerializedExercise: Codable {
     let reps: Int16
     let weight: Double
     let duration: Int16
+    let durationSeconds: Int16?
     let distance: Double
     let calories: Int16
     let holdTime: Int16
@@ -259,6 +260,7 @@ class DataManager: ObservableObject {
                 newEx.reps = exercise.reps
                 newEx.weight = exercise.weight
                 newEx.duration = exercise.duration
+                newEx.durationSeconds = exercise.durationSeconds
                 newEx.distance = exercise.distance
                 newEx.calories = exercise.calories
                 newEx.holdTime = exercise.holdTime
@@ -295,6 +297,7 @@ class DataManager: ObservableObject {
         reps: Int16 = 0,
         weight: Double = 0.0,
         duration: Int16 = 0,
+        durationSeconds: Int16 = 0,
         distance: Double = 0.0,
         calories: Int16 = 0,
         holdTime: Int16 = 0,
@@ -309,6 +312,7 @@ class DataManager: ObservableObject {
             reps: reps,
             weight: weight,
             duration: duration,
+            durationSeconds: durationSeconds,
             distance: distance,
             calories: calories,
             holdTime: holdTime,
@@ -328,6 +332,7 @@ class DataManager: ObservableObject {
         reps: Int16? = nil,
         weight: Double? = nil,
         duration: Int16? = nil,
+        durationSeconds: Int16? = nil,
         distance: Double? = nil,
         calories: Int16? = nil,
         holdTime: Int16? = nil,
@@ -341,6 +346,7 @@ class DataManager: ObservableObject {
             if let reps = reps { exercise.reps = reps }
             if let weight = weight { exercise.weight = weight }
             if let duration = duration { exercise.duration = duration }
+            if let durationSeconds = durationSeconds { exercise.durationSeconds = durationSeconds }
             if let distance = distance { exercise.distance = distance }
             if let calories = calories { exercise.calories = calories }
             if let holdTime = holdTime { exercise.holdTime = holdTime }
@@ -391,6 +397,7 @@ class DataManager: ObservableObject {
         newExercise.reps = exercise.reps
         newExercise.weight = exercise.weight
         newExercise.duration = exercise.duration
+        newExercise.durationSeconds = exercise.durationSeconds
         newExercise.distance = exercise.distance
         newExercise.calories = exercise.calories
         newExercise.holdTime = exercise.holdTime
@@ -419,6 +426,7 @@ class DataManager: ObservableObject {
             newEx.reps = exercise.reps
             newEx.weight = exercise.weight
             newEx.duration = exercise.duration
+            newEx.durationSeconds = exercise.durationSeconds
             newEx.distance = exercise.distance
             newEx.calories = exercise.calories
             newEx.holdTime = exercise.holdTime

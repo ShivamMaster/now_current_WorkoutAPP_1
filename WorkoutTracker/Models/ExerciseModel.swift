@@ -87,6 +87,7 @@ class ExerciseModel: NSManagedObject, Identifiable {
     @NSManaged public var reps: Int16
     @NSManaged public var weight: Double
     @NSManaged public var duration: Int16
+    @NSManaged public var durationSeconds: Int16
     @NSManaged public var distance: Double
     @NSManaged public var calories: Int16
     @NSManaged public var holdTime: Int16
@@ -106,9 +107,17 @@ class ExerciseModel: NSManagedObject, Identifiable {
         case .strengthTraining, .functional:
             return "\(sets) sets × \(reps) reps @ \(String(format: "%g", weight)) kg"
         case .cardio:
-            return "\(duration) min · \(String(format: "%.1f", distance)) km · \(calories) kcal"
+            var durationStr = "\(duration) min"
+            if durationSeconds > 0 {
+                durationStr += " \(durationSeconds) sec"
+            }
+            return "\(durationStr) · \(String(format: "%.1f", distance)) km · \(calories) kcal"
         case .flexibility:
-            return "\(sets) sets · \(duration) min · \(holdTime)s hold"
+            var durationStr = "\(duration) min"
+            if durationSeconds > 0 {
+                durationStr += " \(durationSeconds) sec"
+            }
+            return "\(sets) sets · \(durationStr) · \(holdTime)s hold"
         case .bodyweight:
             return "\(sets) sets × \(reps) reps"
         }
@@ -123,6 +132,7 @@ class ExerciseModel: NSManagedObject, Identifiable {
         reps: Int16 = 0,
         weight: Double = 0.0,
         duration: Int16 = 0,
+        durationSeconds: Int16 = 0,
         distance: Double = 0.0,
         calories: Int16 = 0,
         holdTime: Int16 = 0,
@@ -138,6 +148,7 @@ class ExerciseModel: NSManagedObject, Identifiable {
         exercise.reps = reps
         exercise.weight = weight
         exercise.duration = duration
+        exercise.durationSeconds = durationSeconds
         exercise.distance = distance
         exercise.calories = calories
         exercise.holdTime = holdTime

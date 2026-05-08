@@ -69,6 +69,7 @@ struct AddExerciseView: View {
     @State private var reps = ""
     @State private var weight = ""
     @State private var duration = ""
+    @State private var durationSeconds = ""
     @State private var distance = ""
     @State private var calories = ""
     @State private var holdTime = ""
@@ -81,6 +82,7 @@ struct AddExerciseView: View {
         !reps.isEmpty ||
         !weight.isEmpty ||
         !duration.isEmpty ||
+        !durationSeconds.isEmpty ||
         !distance.isEmpty ||
         !calories.isEmpty ||
         !holdTime.isEmpty ||
@@ -90,7 +92,7 @@ struct AddExerciseView: View {
 
     @State private var showingExerciseList = false
 
-    enum ExerciseField: Hashable { case sets, reps, weight, duration, distance, calories, holdTime, notes }
+    enum ExerciseField: Hashable { case sets, reps, weight, duration, durationSeconds, distance, calories, holdTime, notes }
 
     init(workout: WorkoutModel, preselectedType: ExerciseType? = nil) {
         self.workout = workout
@@ -171,13 +173,23 @@ struct AddExerciseView: View {
                                     .focused($focusedField, equals: .weight)
                             }
                         case "Duration (min)":
-                            HStack {
-                                Text("Duration (min)")
-                                Spacer()
-                                TextField("Minutes", text: $duration)
-                                    .keyboardType(.numberPad)
-                                    .multilineTextAlignment(.trailing)
-                                    .focused($focusedField, equals: .duration)
+                            VStack(alignment: .leading, spacing: 10) {
+                                HStack {
+                                    Text("Duration (min)")
+                                    Spacer()
+                                    TextField("Minutes", text: $duration)
+                                        .keyboardType(.numberPad)
+                                        .multilineTextAlignment(.trailing)
+                                        .focused($focusedField, equals: .duration)
+                                }
+                                HStack {
+                                    Text("Seconds (Optional)")
+                                    Spacer()
+                                    TextField("Seconds", text: $durationSeconds)
+                                        .keyboardType(.numberPad)
+                                        .multilineTextAlignment(.trailing)
+                                        .focused($focusedField, equals: .durationSeconds)
+                                }
                             }
                         case "Distance (km)":
                             HStack {
@@ -278,6 +290,7 @@ struct AddExerciseView: View {
         let repsValue = Int16(reps) ?? 0
         var weightValue = Double(weight) ?? 0.0
         let durationValue = Int16(duration) ?? 0
+        let durationSecValue = Int16(durationSeconds) ?? 0
         let distanceValue = Double(distance) ?? 0.0
         let caloriesValue = Int16(calories) ?? 0
         let holdTimeValue = Int16(holdTime) ?? 0
@@ -294,6 +307,7 @@ struct AddExerciseView: View {
             reps: repsValue,
             weight: weightValue,
             duration: durationValue,
+            durationSeconds: durationSecValue,
             distance: distanceValue,
             calories: caloriesValue,
             holdTime: holdTimeValue,

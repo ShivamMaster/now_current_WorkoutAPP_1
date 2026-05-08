@@ -224,8 +224,16 @@ struct EnhancedExerciseRowView: View {
         if type.measurementFields.contains("Weight (kg)") && exercise.weight > 0 {
             metrics.append(displayWeightString(weightInKg: exercise.weight, unit: displayWeightUnit))
         }
-        if type.measurementFields.contains("Duration (min)") && exercise.duration > 0 {
-            metrics.append("\(exercise.duration) min")
+        if type.measurementFields.contains("Duration (min)") && (exercise.duration > 0 || exercise.durationSeconds > 0) {
+            var durationStr = ""
+            if exercise.duration > 0 {
+                durationStr += "\(exercise.duration) min"
+            }
+            if exercise.durationSeconds > 0 {
+                if !durationStr.isEmpty { durationStr += " " }
+                durationStr += "\(exercise.durationSeconds) sec"
+            }
+            metrics.append(durationStr)
         }
         if type.measurementFields.contains("Distance (km)") && exercise.distance > 0 {
             metrics.append(String(format: "%.1f km", exercise.distance))

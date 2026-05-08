@@ -162,7 +162,8 @@ extension DataManager {
                     name: ex.name,
                     type: ex.exerciseType ?? "Strength Training",
                     sets: ex.sets, reps: ex.reps, weight: ex.weight,
-                    duration: ex.duration, distance: ex.distance,
+                    duration: ex.duration, durationSeconds: ex.durationSeconds,
+                    distance: ex.distance,
                     calories: ex.calories, holdTime: ex.holdTime,
                     notes: ex.notes, order: ex.order
                 )
@@ -247,7 +248,8 @@ extension DataManager {
             let ex = ExerciseModel(context: context)
             ex.id = UUID(); ex.name = sEx.name; ex.exerciseType = sEx.type
             ex.sets = sEx.sets; ex.reps = sEx.reps; ex.weight = sEx.weight
-            ex.duration = sEx.duration; ex.distance = sEx.distance
+            ex.duration = sEx.duration; ex.durationSeconds = sEx.durationSeconds ?? 0
+            ex.distance = sEx.distance
             ex.calories = sEx.calories; ex.holdTime = sEx.holdTime
             ex.notes = sEx.notes; ex.order = sEx.order; ex.workout = workout
         }

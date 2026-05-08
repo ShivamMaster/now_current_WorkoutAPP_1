@@ -6,31 +6,33 @@ import CoreData // Import CoreData
 struct SimpleEntry: TimelineEntry {
     let date: Date
     let currentMonthDate: Date
-    let workoutDays: Set<Int> // Make sure this is back
+    let workoutDays: Set<Int>
+    let isError: Bool
 }
 
 // Restore your original Provider definition
 struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> SimpleEntry {
         // Restore your placeholder logic
-        SimpleEntry(date: Date(), currentMonthDate: Date(), workoutDays: [1, 5, 15])
+        SimpleEntry(date: Date(), currentMonthDate: Date(), workoutDays: [1, 5, 15], isError: false)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        // Restore your snapshot logic (including fetchWorkoutDays)
-        let entry = SimpleEntry(date: Date(), currentMonthDate: Date(), workoutDays: fetchWorkoutDays(for: Date()))
+        let days = fetchWorkoutDays(for: Date())
+        let isError = getSharedManagedObjectContext() == nil
+        let entry = SimpleEntry(date: Date(), currentMonthDate: Date(), workoutDays: days, isError: isError)
         completion(entry)
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<SimpleEntry>) -> ()) {
         // Restore your timeline logic (including fetchWorkoutDays)
         let currentDate = Date()
-        // Use Calendar.current consistently
         let calendar = Calendar.current
         let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: currentDate))!
-        let workoutDays = fetchWorkoutDays(for: startOfMonth) // Fetch data using the updated function
+        let workoutDays = fetchWorkoutDays(for: startOfMonth)
+        let isError = getSharedManagedObjectContext() == nil
 
-        let entry = SimpleEntry(date: currentDate, currentMonthDate: startOfMonth, workoutDays: workoutDays)
+        let entry = SimpleEntry(date: currentDate, currentMonthDate: startOfMonth, workoutDays: workoutDays, isError: isError)
 
         // Calculate next update time (e.g., start of next day)
         let nextUpdateDate = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: currentDate))!
@@ -202,34 +204,45 @@ struct WidgetEntryView : View {
                 }
             }
 
-            // Calendar grid (restore the full logic)
-            let days = daysInMonth(for: entry.currentMonthDate)
-            let firstDayWeekday = weekday(for: entry.currentMonthDate)
-            let totalCells = days.count + firstDayWeekday - 1
-            let numberOfRows = Int(ceil(Double(totalCells) / 7.0))
+            if entry.isError {
+                VStack {
+                    Image(systemName: "exclamationmark.triangle")
+                        .foregroundColor(.orange)
+                    Text("Sync app to use widgets")
+                        .font(.caption)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                }
+            } else {
+                // Calendar grid (restore the full logic)
+                let days = daysInMonth(for: entry.currentMonthDate)
+                let firstDayWeekday = weekday(for: entry.currentMonthDate)
+                let totalCells = days.count + firstDayWeekday - 1
+                let numberOfRows = Int(ceil(Double(totalCells) / 7.0))
 
-            ForEach(0..<numberOfRows, id: \.self) { row in
-                HStack(spacing: 0) { // Reduced spacing
-                    ForEach(1...7, id: \.self) { col in
-                        let dayIndex = row * 7 + col - firstDayWeekday
-                        if dayIndex >= 0 && dayIndex < days.count {
-                            let day = days[dayIndex]
-                            let isWorkoutDay = entry.workoutDays.contains(day)
-                            Text("\(day)")
-                                .font(.caption2) // Smaller font for day numbers
-                                .frame(maxWidth: .infinity)
-                                .padding(1) // Reduced padding around numbers
-                                // Use accent color for background and make it boxy
-                                .background(isWorkoutDay ? Color.accentColor.opacity(0.6) : Color.clear)
-                                .clipShape(RoundedRectangle(cornerRadius: 3)) // Boxier shape
-                                .foregroundColor(isToday(day: day) ? .red : .primary)
-                                .minimumScaleFactor(0.6) // Allow text to shrink slightly if needed
-                        } else {
-                            // Keep empty text for alignment
-                            Text("")
-                                .font(.caption2) // Match font size
-                                .frame(maxWidth: .infinity)
-                                .padding(1) // Match padding
+                ForEach(0..<numberOfRows, id: \.self) { row in
+                    HStack(spacing: 0) { // Reduced spacing
+                        ForEach(1...7, id: \.self) { col in
+                            let dayIndex = row * 7 + col - firstDayWeekday
+                            if dayIndex >= 0 && dayIndex < days.count {
+                                let day = days[dayIndex]
+                                let isWorkoutDay = entry.workoutDays.contains(day)
+                                Text("\(day)")
+                                    .font(.caption2) // Smaller font for day numbers
+                                    .frame(maxWidth: .infinity)
+                                    .padding(1) // Reduced padding around numbers
+                                    // Use accent color for background and make it boxy
+                                    .background(isWorkoutDay ? Color.accentColor.opacity(0.6) : Color.clear)
+                                    .clipShape(RoundedRectangle(cornerRadius: 3)) // Boxier shape
+                                    .foregroundColor(isToday(day: day) ? .red : .primary)
+                                    .minimumScaleFactor(0.6) // Allow text to shrink slightly if needed
+                            } else {
+                                // Keep empty text for alignment
+                                Text("")
+                                    .font(.caption2) // Match font size
+                                    .frame(maxWidth: .infinity)
+                                    .padding(1) // Match padding
+                            }
                         }
                     }
                 }

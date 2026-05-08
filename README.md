@@ -1,6 +1,6 @@
-# 🏋️‍♂️ Workout Tracker iOS
+# ProgressBuddy - iOS Workout Tracker
 
-A professional, high-performance, and **lightweight** workout tracking application built for iOS. Designed for simplicity, privacy, and full control over your data.
+A premium, lightweight workout tracking application built with SwiftUI, Core Data, and Firebase. Designed for simplicity, performance, and complete data ownership.
 
 ---
 
@@ -22,35 +22,47 @@ In a world of bloated fitness apps filled with subscriptions, ads, and forced so
 
 ---
 
-## 🚀 Features
+## 📱 Screenshots
 
-- **Workout Logging**: Track exercises, sets, reps, and weights with ease.
-- **Dynamic Calendar**: A color-coded calendar view that tracks your workout splits (Push, Pull, Legs, etc.).
-- **Progress Analytics**: Interactive charts powered by Swift Charts to monitor strength and volume trends.
-- **Cloud Backup & Restore**: One-tap backup to Firebase Firestore.
-- **Data Retention Policies**: Choose how long to keep data locally to save device space while keeping everything safe in the cloud.
-- **"Click Back" Navigation**: A premium navigation feature allowing you to instantly return to the root view by tapping the active tab icon.
-- **Dark Mode Support**: A sleek, system-integrated dark interface for late-night sessions.
-- **Customizable Units**: Toggle between Metric (kg) and Imperial (lbs) units.
+<p align="center">
+  <img src="App_Icon_Reference/screenshots/home.png" width="200" alt="Home Screen">
+  <img src="App_Icon_Reference/screenshots/workout.png" width="200" alt="Workout Tracking">
+  <img src="App_Icon_Reference/screenshots/progress.png" width="200" alt="Progress Charts">
+  <img src="App_Icon_Reference/screenshots/widgets.png" width="200" alt="iOS Widgets">
+</p>
 
----
+## ✨ Key Features
+
+- **Fluid UI**: Apple-inspired design with smooth transitions and haptic feedback.
+- **Workout Splits**: Create and manage custom workout splits (Push/Pull/Legs, etc.).
+- **Smart Tracking**: Support for Strength Training, Cardio (with optional seconds), Flexibility, and Bodyweight exercises.
+- **Progress Visualization**: Dynamic charts powered by Swift Charts to track your gains over time.
+- **Cloud Sync**: Optional Firebase integration to back up your data and sync across devices.
+- **Apple Integration**: Keychain-backed credentials and native iOS Widgets.
+- **Tab State Preservation**: Never lose your in-progress workout log when switching tabs.
+- **"Click Back"**: Quickly return to root views by tapping the active tab icon.
+
+## 🧩 iOS Widgets
+
+ProgressBuddy includes two native widgets to keep you motivated and informed:
+1. **Workout Calendar**: View your recent workout history and upcoming schedule at a glance.
+2. **Motivational Quotes**: Stay inspired with daily fitness quotes directly on your home screen.
 
 ## 🛠 Setup & Installation
 
 ### Prerequisites
-- **Mac** running macOS (latest version recommended).
-- **Xcode** (latest version).
-- **iOS Device or Simulator** (iOS 16.0+).
+- **Mac** running macOS.
+- **Xcode 15+** installed.
+- **iOS Device** (iOS 17.0+) or Simulator.
 
-### Getting Started
-
-#### 1. Open the Project
-1. Clone this repository to your local machine.
-2. Open the `WorkoutTracker.xcodeproj` file in Xcode.
-3. Select your target device (iPhone or Simulator).
+### Option 1: Development (Xcode)
+## Step 1
+1. Clone the repository.
+2. Open `WorkoutTracker.xcodeproj` in Xcode.
+3. Configure your **Development Team** in Signing & Capabilities for both the app and widget targets.
 4. Press `Cmd + R` to Build and Run.
 
-#### 2. Configure Signing & Capabilities (Required for Physical Devices)
+## Step 2: Configure Signing & Capabilities (Required for Physical Devices)
 To run the app on your physical iPhone, you must sign it with your Apple ID:
 1. In the Xcode Project Navigator (left sidebar), select the **WorkoutTracker** project (the blue icon at the top).
 2. Select the **WorkoutTracker** target under the "Targets" section.
@@ -59,7 +71,7 @@ To run the app on your physical iPhone, you must sign it with your Apple ID:
 5. In the **Team** dropdown, select your name (e.g., "Your Name (Personal Team)").
 6. **Bundle Identifier**: Ensure this is unique. If you get an error, change it slightly (e.g., add your initials: `com.yourname.WorkoutTracker.custom`).
 
-#### 3. Connect & Run on Your Local Device
+## Step 3: Connect & Run on Your Local Device
 1. Connect your iPhone to your Mac using a USB-C or Lightning cable.
 2. In the Xcode toolbar (at the top), click on the device selector (next to the Play button) and select your **physical iPhone**.
 3. Press **Cmd + R** (or click the Play button) to build and install.
@@ -71,9 +83,35 @@ To run the app on your physical iPhone, you must sign it with your Apple ID:
 
 ---
 
+### Option 2: Sideloading (.ipa)
+## 🏗 Building the .ipa
+
+You can generate a distributable `.ipa` file using Fastlane:
+
+```bash
+# Install dependencies
+bundle install
+
+# Build the .ipa (includes main app and widgets)
+bundle exec fastlane build_ipa
+```
+
+Alternatively, use Xcode:
+1. Product > Archive.
+2. Distribute App > Custom > Export.
+
+## Step 3: Install .ipa
+If you have an `.ipa` file, you can install it using **Sideloadly**:
+1. Download [Sideloadly](https://sideloadly.io/).
+2. Connect your iPhone to your Mac/PC.
+3. Drag the `WorkoutTracker.ipa` into Sideloadly.
+4. Enter your Apple ID and click **Start**.
+5. Once installed, go to **Settings > General > VPN & Device Management** on your iPhone and trust your developer profile.
+
+
 ## 🔥 Firebase Configuration
 
-This app uses a unique "Dynamic Configuration" approach. Instead of hardcoding a `GoogleService-Info.plist`, you can configure your own Firebase project directly within the app settings.
+This app uses a "Dynamic Configuration" approach. Instead of hardcoding a `GoogleService-Info.plist`, you can configure your own Firebase project directly within the app settings.
 
 ### 1. Create a Firebase Project
 1. Go to the [Firebase Console](https://console.firebase.google.com/).
@@ -91,10 +129,11 @@ This app uses a unique "Dynamic Configuration" approach. Instead of hardcoding a
    - **Google App ID**
    - **GCM Sender ID**
 5. Tap **Save & Connect**.
-6. (Optional) Choose **Save to Keychain**: This securely stores your credentials in your encrypted iCloud Keychain. Even if you delete the app or get a new iPhone, the app will automatically detect your credentials on first launch.
 
-### 3. Backup & Restore
-Once connected, simply enter a **Unique User ID** (can be anything you choose) to backup or restore your data to your private Firestore instance.
+## 🔒 Security & Privacy
+
+- **Data Privacy**: Your workout data stays on your device (Core Data) unless you explicitly enable Firebase Sync.
+- **Secure Storage**: Firebase credentials are stored securely in the Apple Keychain with iCloud sync support.
 
 ---
 
@@ -111,3 +150,6 @@ Once connected, simply enter a **Unique User ID** (can be anything you choose) t
 
 ## 📄 License
 This project is for personal use and demonstration. Check the repository for specific license details.
+
+---
+*Created by Shivam Goel*

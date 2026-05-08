@@ -74,44 +74,48 @@ struct MainTabView: View {
     @State private var tapCount: Int = 0
     
     var body: some View {
-        // Custom binding to detect repeat taps on the same tab (for "Click Back" feature).
-        let selectionBinding = Binding<Int>(
-            get: { self.selectedTab },
-            set: { newValue in
-                if newValue == self.selectedTab {
-                    handleRepeatTap()
-                } else {
-                    self.selectedTab = newValue
-                    self.tapCount = 0
-                }
+        ZStack(alignment: .bottom) {
+            // MARK: - Persistent Tab Content
+            // Using ZStack with opacity ensures views are kept in memory and preserve their state (scroll position, text inputs, sheets)
+            Group {
+                WorkoutListView()
+                    .opacity(selectedTab == 0 ? 1 : 0)
+                    .zIndex(selectedTab == 0 ? 1 : 0)
+                
+                ProgressView()
+                    .opacity(selectedTab == 1 ? 1 : 0)
+                    .zIndex(selectedTab == 1 ? 1 : 0)
+                
+                CalendarView()
+                    .opacity(selectedTab == 2 ? 1 : 0)
+                    .zIndex(selectedTab == 2 ? 1 : 0)
+                
+                SettingsView()
+                    .opacity(selectedTab == 3 ? 1 : 0)
+                    .zIndex(selectedTab == 3 ? 1 : 0)
             }
-        )
-        
-        return TabView(selection: selectionBinding) {
-            WorkoutListView()
-                .tabItem {
-                    Label("Workouts", systemImage: "list.bullet")
-                }
-                .tag(0)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             
-            ProgressView()
-                .tabItem {
-                    Label("Progress", systemImage: "chart.line.uptrend.xyaxis")
+            // MARK: - Custom Tab Bar
+            VStack(spacing: 0) {
+                Spacer()
+                Divider()
+                HStack {
+                    tabButton(index: 0, label: "Workouts", icon: "list.bullet")
+                    Spacer()
+                    tabButton(index: 1, label: "Progress", icon: "chart.line.uptrend.xyaxis")
+                    Spacer()
+                    tabButton(index: 2, label: "Calendar", icon: "calendar")
+                    Spacer()
+                    tabButton(index: 3, label: "Settings", icon: "gear")
                 }
-                .tag(1)
-            
-            CalendarView()
-                .tabItem {
-                    Label("Calendar", systemImage: "calendar")
-                }
-                .tag(2)
-            
-            SettingsView()
-                .tabItem {
-                    Label("Settings", systemImage: "gear")
-                }
-                .tag(3)
+                .padding(.horizontal, 25)
+                .padding(.top, 10)
+                .padding(.bottom, 34) // Standard iPhone safe area bottom
+                .background(.ultraThinMaterial)
+            }
         }
+        .ignoresSafeArea(.all, edges: .bottom)
         .onChange(of: scenePhase) { _, newPhase in
             // Handle app lifecycle events for data safety.
             if (newPhase == .inactive || newPhase == .active) && dataManager.hasUnsyncedChanges {
@@ -139,6 +143,28 @@ struct MainTabView: View {
         }
         // Conditionally defer system gestures to prevent accidental backgrounding when unsynced.
         .defersSystemGestures(on: dataManager.hasUnsyncedChanges ? .bottom : [])
+    }
+    
+    // MARK: - View Helpers
+    
+    private func tabButton(index: Int, label: String, icon: String) -> some View {
+        Button(action: {
+            if selectedTab == index {
+                handleRepeatTap()
+            } else {
+                selectedTab = index
+                tapCount = 0
+            }
+        }) {
+            VStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 22))
+                Text(label)
+                    .font(.system(size: 10, weight: .medium))
+            }
+            .foregroundColor(selectedTab == index ? .blue : .gray)
+            .frame(minWidth: 60)
+        }
     }
     
     // MARK: - Logic

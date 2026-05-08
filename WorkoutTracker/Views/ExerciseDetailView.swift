@@ -22,6 +22,7 @@ struct ExerciseDetailView: View {
     @State private var reps: String
     @State private var weightInputString: String
     @State private var duration: String
+    @State private var durationSeconds: String
     @State private var distance: String
     @State private var calories: String
     @State private var holdTime: String
@@ -37,7 +38,7 @@ struct ExerciseDetailView: View {
     private let lbsToKgFactor: Decimal = 0.453592
 
     /// Fields available for focus management.
-    enum ExerciseField: Hashable { case name, sets, reps, weight, duration, distance, calories, holdTime, notes }
+    enum ExerciseField: Hashable { case name, sets, reps, weight, duration, durationSeconds, distance, calories, holdTime, notes }
 
     init(exercise: ExerciseModel) {
         self.exercise = exercise
@@ -48,6 +49,7 @@ struct ExerciseDetailView: View {
         _sets = State(initialValue: "\(exercise.sets)")
         _reps = State(initialValue: "\(exercise.reps)")
         _duration = State(initialValue: "\(exercise.duration)")
+        _durationSeconds = State(initialValue: "\(exercise.durationSeconds)")
         _distance = State(initialValue: String(format: "%.1f", exercise.distance))
         _calories = State(initialValue: "\(exercise.calories)")
         _holdTime = State(initialValue: "\(exercise.holdTime)")
@@ -119,13 +121,23 @@ struct ExerciseDetailView: View {
                                 }
                             }
                         case "Duration (min)":
-                            HStack {
-                                Text("Duration (min)")
-                                Spacer()
-                                TextField("Minutes", text: $duration)
-                                    .keyboardType(.numberPad)
-                                    .multilineTextAlignment(.trailing)
-                                    .focused($focusedField, equals: .duration)
+                            VStack(alignment: .leading, spacing: 10) {
+                                HStack {
+                                    Text("Duration (min)")
+                                    Spacer()
+                                    TextField("Minutes", text: $duration)
+                                        .keyboardType(.numberPad)
+                                        .multilineTextAlignment(.trailing)
+                                        .focused($focusedField, equals: .duration)
+                                }
+                                HStack {
+                                    Text("Seconds (Optional)")
+                                    Spacer()
+                                    TextField("Seconds", text: $durationSeconds)
+                                        .keyboardType(.numberPad)
+                                        .multilineTextAlignment(.trailing)
+                                        .focused($focusedField, equals: .durationSeconds)
+                                }
                             }
                         case "Distance (km)":
                             HStack {
@@ -187,7 +199,15 @@ struct ExerciseDetailView: View {
                                     .foregroundColor(.secondary)
                             }
                         case "Duration (min)":
-                            HStack { Text("Duration"); Spacer(); Text("\(exercise.duration) min").foregroundColor(.secondary) }
+                            HStack {
+                                Text("Duration")
+                                Spacer()
+                                var durationStr = "\(exercise.duration) min"
+                                if exercise.durationSeconds > 0 {
+                                    durationStr += " \(exercise.durationSeconds) sec"
+                                }
+                                Text(durationStr).foregroundColor(.secondary)
+                            }
                         case "Distance (km)":
                             HStack { Text("Distance"); Spacer(); Text("\(String(format: "%.1f", exercise.distance)) km").foregroundColor(.secondary) }
                         case "Calories":
@@ -273,6 +293,7 @@ struct ExerciseDetailView: View {
         sets = "\(exercise.sets)"
         reps = "\(exercise.reps)"
         duration = "\(exercise.duration)"
+        durationSeconds = "\(exercise.durationSeconds)"
         distance = String(format: "%.1f", exercise.distance)
         calories = "\(exercise.calories)"
         holdTime = "\(exercise.holdTime)"
@@ -288,6 +309,7 @@ struct ExerciseDetailView: View {
         sets = "\(exercise.sets)"
         reps = "\(exercise.reps)"
         duration = "\(exercise.duration)"
+        durationSeconds = "\(exercise.durationSeconds)"
         distance = String(format: "%.1f", exercise.distance)
         calories = "\(exercise.calories)"
         holdTime = "\(exercise.holdTime)"
@@ -302,6 +324,7 @@ struct ExerciseDetailView: View {
               let repsValue = Int16(reps),
               let weightValue = Double(weightInputString.replacingOccurrences(of: ",", with: ".")),
               let durationValue = Int16(duration),
+              let durationSecValue = Int16(durationSeconds),
               let distanceValue = Double(distance.replacingOccurrences(of: ",", with: ".")),
               let caloriesValue = Int16(calories),
               let holdTimeValue = Int16(holdTime)
@@ -317,6 +340,7 @@ struct ExerciseDetailView: View {
             reps: repsValue,
             weight: finalWeightKg,
             duration: durationValue,
+            durationSeconds: durationSecValue,
             distance: distanceValue,
             calories: caloriesValue,
             holdTime: holdTimeValue,
